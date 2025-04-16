@@ -4,7 +4,12 @@ local function duplicatePet(petName)
     local InventoryDB = Loads("InventoryDB")
     local Inventory = ClientData.get("inventory")
     local PetHandler = Loads("PetHandler")
-    local RideRemote = game.ReplicatedStorage:WaitForChild("RidePetRemote") -- Adjust if needed
+    local RideRemote = game.ReplicatedStorage:FindFirstChild("RidePetRemote")
+
+    if not RideRemote then
+        warn("❌ RidePetRemote not found in ReplicatedStorage.")
+        return false
+    end
 
     local function generate_prop()
         return {
@@ -31,10 +36,11 @@ local function duplicatePet(petName)
     for category_name, category_table in pairs(InventoryDB) do
         for id, item in pairs(category_table) do
             if category_name == "pets" and item.name:lower() == petName:lower() then
-                local fake_uuid = game.HttpService:GenerateGUID(false)
+                local rawUUID = game.HttpService:GenerateGUID(false)
+                local fullUUID = "uuid_" .. rawUUID
                 local n_item = cloneTable(item)
 
-                n_item["unique"] = "uuid_" .. fake_uuid
+                n_item["unique"] = fullUUID
                 n_item["category"] = "pets"
                 n_item["properties"] = generate_prop()
                 n_item["newness_order"] = math.random(1, 900000)
@@ -43,14 +49,30 @@ local function duplicatePet(petName)
                     Inventory[category_name] = {}
                 end
 
-                Inventory[category_name][fake_uuid] = n_item
+                Inventory[category_name][fullUUID] = n_item
+                print("✅ Added pet to inventory with UUID:", fullUUID)
 
-                -- ✅ Equip the pet
-                PetHandler.equip("uuid_" .. fake_uuid)
+                -- Try equipping
+                local success, err = pcall(function()
+                    PetHandler.equip(fullUUID)
+                end)
 
-                -- ✅ Wait a bit then ride it
+                if not success then
+                    warn("❌ Failed to equip pet:", err)
+                else
+                    print("✅ Pet equipped.")
+                end
+
+                -- Then ride
                 task.delay(0.3, function()
-                    RideRemote:FireServer("uuid_" .. fake_uuid)
+                    local success2, err2 = pcall(function()
+                        RideRemote:FireServer(fullUUID)
+                        print("✅ RideRemote fired for:", fullUUID)
+                    end)
+
+                    if not success2 then
+                        warn("❌ Failed to ride pet:", err2)
+                    end
                 end)
 
                 return true
