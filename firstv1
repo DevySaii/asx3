@@ -3,64 +3,62 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 
-local petNameBox = script.Parent:WaitForChild("PetNameBox")
-local spawnBtn = script.Parent:WaitForChild("SpawnBtn")
-local tooltip = script.Parent:WaitForChild("Tooltip")
-local rarityButtons = {
-    NP = script.Parent:WaitForChild("NP"),
-    R = script.Parent:WaitForChild("R"),
-    F = script.Parent:WaitForChild("F"),
-    FR = script.Parent:WaitForChild("FR"),
-    Neon = script.Parent:WaitForChild("Neon"),
-    NR = script.Parent:WaitForChild("NR"),
-    NF = script.Parent:WaitForChild("NF"),
-    NFR = script.Parent:WaitForChild("NFR"),
-    M = script.Parent:WaitForChild("M"),
-    MR = script.Parent:WaitForChild("MR"),
-    MF = script.Parent:WaitForChild("MF"),
-    MFR = script.Parent:WaitForChild("MFR"),
-}
+local gui = script.Parent
+local petNameBox = gui:WaitForChild("PetNameBox")
+local spawnBtn = gui:WaitForChild("SpawnBtn")
+local tooltip = gui:WaitForChild("Tooltip")
 
-local currentSuffix = ""
+-- Rarity Buttons
+local rarities = {"NP", "R", "F", "FR", "Neon", "NR", "NF", "NFR", "M", "MR", "MF", "MFR"}
+local currentRarity = "NP"
 
--- Function to update tooltip text
-local function updateTooltip(name, rarity, age)
-    tooltip.Text = "Name: " .. name .. "\nRarity: " .. rarity .. "\nAge: " .. age
+for _, rarity in ipairs(rarities) do
+	local btn = gui:FindFirstChild(rarity)
+	if btn then
+		btn.MouseButton1Click:Connect(function()
+			currentRarity = rarity
+			print("Selected rarity:", rarity)
+		end)
+	end
 end
 
--- When a rarity button is clicked, update suffix
-for key, button in pairs(rarityButtons) do
-    button.MouseButton1Click:Connect(function()
-        currentSuffix = key
-        print("Selected suffix:", key)
-    end)
+-- Tooltip function
+local function showTooltip(name, rarity, age)
+	tooltip.Text = "Name: " .. name .. "\nRarity: " .. rarity .. "\nAge: " .. age
+	tooltip.Visible = true
+	task.delay(5, function()
+		if tooltip.Text:find(name) then
+			tooltip.Visible = false
+		end
+	end)
 end
 
--- Spawning function
-local function spawnPet()
-    local baseName = petNameBox.Text
-    if baseName == "" then return end
+-- Spawning Logic
+spawnBtn.MouseButton1Click:Connect(function()
+	local petBaseName = petNameBox.Text
+	if petBaseName == "" then return end
 
-    local fullName = baseName .. (currentSuffix ~= "" and " " .. currentSuffix or "")
-    local petModel = ReplicatedStorage:FindFirstChild("Pets"):FindFirstChild(baseName)
+	local petFolder = ReplicatedStorage:FindFirstChild("Pets")
+	if not petFolder then warn("Missing 'Pets' folder in ReplicatedStorage") return end
 
-    if petModel and petModel:IsA("Model") then
-        local clonedPet = petModel:Clone()
-        local rootPart = clonedPet.PrimaryPart or clonedPet:FindFirstChild("HumanoidRootPart") or clonedPet:FindFirstChildWhichIsA("BasePart")
+	local petTemplate = petFolder:FindFirstChild(petBaseName)
+	if not petTemplate then
+		showTooltip(petBaseName, "Not Found", "-")
+		return
+	end
 
-        if rootPart then
-            clonedPet:SetPrimaryPartCFrame(character.HumanoidRootPart.CFrame * CFrame.new(3, 0, 0))
-            clonedPet.Parent = workspace
-            updateTooltip(fullName, currentSuffix ~= "" and currentSuffix or "Normal", "Newborn")
-        else
-            warn("Pet model is missing a PrimaryPart!")
-            updateTooltip("Error", "No PrimaryPart", "-")
-        end
-    else
-        updateTooltip(baseName, "Not Found", "-")
-        warn("Pet model not found in ReplicatedStorage.Pets")
-    end
-end
+	local pet = petTemplate:Clone()
+	local root = pet.PrimaryPart or pet:FindFirstChildWhichIsA("BasePart")
+	if not root then
+		warn("Pet has no PrimaryPart or base part.")
+		showTooltip(petBaseName, "Invalid Model", "-")
+		return
+	end
 
--- Spawn button clicked
-spawnBtn.MouseButton1Click:Connect(spawnPet)
+	-- Spawn position
+	local charRoot = character:WaitForChild("HumanoidRootPart")
+	pet:SetPrimaryPartCFrame(charRoot.CFrame * CFrame.new(3, 0, 0))
+	pet.Parent = workspace
+
+	showTooltip(petBaseName, currentRarity, "Newborn")
+end)
