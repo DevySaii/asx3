@@ -1,64 +1,189 @@
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
+--== Saii's Script - Fancy Gradient Pet Spawner ==--
 
-local gui = script.Parent
-local petNameBox = gui:WaitForChild("PetNameBox")
-local spawnBtn = gui:WaitForChild("SpawnBtn")
-local tooltip = gui:WaitForChild("Tooltip")
+local player = game.Players.LocalPlayer
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+gui.Name = "SaiiSpawner"
+gui.ResetOnSpawn = false
 
--- Rarity Buttons
-local rarities = {"NP", "R", "F", "FR", "Neon", "NR", "NF", "NFR", "M", "MR", "MF", "MFR"}
-local currentRarity = "NP"
+-- Main frame
+local main = Instance.new("Frame", gui)
+main.Name = "Main"
+main.AnchorPoint = Vector2.new(0.5, 0.5)
+main.Position = UDim2.new(0.5, 0, 0.5, 0)
+main.Size = UDim2.new(0, 540, 0, 400)
+main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 
-for _, rarity in ipairs(rarities) do
-	local btn = gui:FindFirstChild(rarity)
-	if btn then
-		btn.MouseButton1Click:Connect(function()
-			currentRarity = rarity
-			print("Selected rarity:", rarity)
+local gradient = Instance.new("UIGradient", main)
+gradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 20)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 100))
+}
+gradient.Rotation = 45
+
+local mainCorner = Instance.new("UICorner", main)
+mainCorner.CornerRadius = UDim.new(0, 12)
+
+-- Title
+local title = Instance.new("TextLabel", main)
+title.Size = UDim2.new(1, 0, 0, 40)
+title.BackgroundTransparency = 1
+title.Text = "🐾 Saii's Script - Pet Spawner"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.GothamBold
+title.TextScaled = true
+
+-- Grid for type buttons
+local gridFrame = Instance.new("Frame", main)
+gridFrame.Position = UDim2.new(0.05, 0, 0.13, 0)
+gridFrame.Size = UDim2.new(0.9, 0, 0.5, 0)
+gridFrame.BackgroundTransparency = 1
+
+local gridLayout = Instance.new("UIGridLayout", gridFrame)
+gridLayout.CellSize = UDim2.new(0, 120, 0, 34)
+gridLayout.CellPadding = UDim2.new(0, 5, 0, 5)
+gridLayout.FillDirectionMaxCells = 4
+
+-- TextBox for name input
+local nameBox = Instance.new("TextBox", main)
+nameBox.Position = UDim2.new(0.5, 0, 0.7, 0)
+nameBox.AnchorPoint = Vector2.new(0.5, 0)
+nameBox.Size = UDim2.new(0.85, 0, 0.1, 0)
+nameBox.PlaceholderText = "Enter Pet Name"
+nameBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+nameBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+nameBox.Font = Enum.Font.Gotham
+nameBox.TextScaled = true
+
+local nameCorner = Instance.new("UICorner", nameBox)
+nameCorner.CornerRadius = UDim.new(0, 8)
+
+-- Spawn button
+local spawnBtn = Instance.new("TextButton", main)
+spawnBtn.Position = UDim2.new(0.5, 0, 0.85, 0)
+spawnBtn.AnchorPoint = Vector2.new(0.5, 0)
+spawnBtn.Size = UDim2.new(0.5, 0, 0.1, 0)
+spawnBtn.Text = "✨ Spawn"
+spawnBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+spawnBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+spawnBtn.Font = Enum.Font.GothamBold
+spawnBtn.TextScaled = true
+
+local spawnCorner = Instance.new("UICorner", spawnBtn)
+spawnCorner.CornerRadius = UDim.new(0, 8)
+
+-- Pet type logic
+local petType = "NP"
+local typeButtons = {}
+local petTypes = {
+	{key = "NP", label = "No Pot"},
+	{key = "R", label = "R"},
+	{key = "F", label = "F"},
+	{key = "FR", label = "FR"},
+	{key = "Neon", label = "Neon"},
+	{key = "NR", label = "NR"},
+	{key = "NF", label = "NF"},
+	{key = "NFR", label = "NFR"},
+	{key = "M", label = "M"},
+	{key = "MR", label = "MR"},
+	{key = "MF", label = "MF"},
+	{key = "MFR", label = "MFR"},
+}
+
+for _, pet in ipairs(petTypes) do
+	local btn = Instance.new("TextButton", gridFrame)
+	btn.Text = pet.label
+	btn.Font = Enum.Font.Gotham
+	btn.TextScaled = true
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	btn.AutoButtonColor = true
+
+	local corner = Instance.new("UICorner", btn)
+	corner.CornerRadius = UDim.new(0, 6)
+
+	btn.MouseButton1Click:Connect(function()
+		petType = pet.key
+		for _, b in pairs(typeButtons) do
+			b.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+		end
+		btn.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
+	end)
+
+	table.insert(typeButtons, btn)
+end
+
+-- Pet spawn logic
+local function duplicatePet(petName)
+	local Fsys = require(game.ReplicatedStorage.Fsys)
+	local ClientData = Fsys.load("ClientData")
+	local InventoryDB = Fsys.load("InventoryDB")
+	local Inventory = ClientData.get("inventory")
+
+	local function clone(tbl)
+		local new = {}
+		for k, v in pairs(tbl) do
+			new[k] = typeof(v) == "table" and clone(v) or v
+		end
+		return new
+	end
+
+	local function getProps()
+		return {
+			rideable = petType:find("R") and true or false,
+			flyable = petType:find("F") and true or false,
+			neon = petType:find("N") and true or false,
+			mega_neon = petType:find("M") and true or false,
+			age = 1
+		}
+	end
+
+	for cat, items in pairs(InventoryDB) do
+		if cat == "pets" then
+			for id, item in pairs(items) do
+				if item.name == petName then
+					local uuid = game.HttpService:GenerateGUID(false)
+					local petClone = clone(item)
+					petClone["unique"] = "uuid_" .. uuid
+					petClone["category"] = "pets"
+					petClone["properties"] = getProps()
+					petClone["newness_order"] = math.random(1, 999999)
+
+					Inventory[cat] = Inventory[cat] or {}
+					Inventory[cat][uuid] = petClone
+					return
+				end
+			end
+		end
+	end
+end
+
+-- Trigger spawn
+spawnBtn.MouseButton1Click:Connect(function()
+	local name = nameBox.Text
+	if name ~= "" then
+		duplicatePet(name)
+	end
+end)
+
+-- Draggable UI
+local UIS = game:GetService("UserInputService")
+local dragging = false
+local dragStart, startPos
+
+main.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = main.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then dragging = false end
 		end)
 	end
-end
+end)
 
--- Tooltip function
-local function showTooltip(name, rarity, age)
-	tooltip.Text = "Name: " .. name .. "\nRarity: " .. rarity .. "\nAge: " .. age
-	tooltip.Visible = true
-	task.delay(5, function()
-		if tooltip.Text:find(name) then
-			tooltip.Visible = false
-		end
-	end)
-end
-
--- Spawning Logic
-spawnBtn.MouseButton1Click:Connect(function()
-	local petBaseName = petNameBox.Text
-	if petBaseName == "" then return end
-
-	local petFolder = ReplicatedStorage:FindFirstChild("Pets")
-	if not petFolder then warn("Missing 'Pets' folder in ReplicatedStorage") return end
-
-	local petTemplate = petFolder:FindFirstChild(petBaseName)
-	if not petTemplate then
-		showTooltip(petBaseName, "Not Found", "-")
-		return
+main.InputChanged:Connect(function(input)
+	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+		local delta = input.Position - dragStart
+		main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 	end
-
-	local pet = petTemplate:Clone()
-	local root = pet.PrimaryPart or pet:FindFirstChildWhichIsA("BasePart")
-	if not root then
-		warn("Pet has no PrimaryPart or base part.")
-		showTooltip(petBaseName, "Invalid Model", "-")
-		return
-	end
-
-	-- Spawn position
-	local charRoot = character:WaitForChild("HumanoidRootPart")
-	pet:SetPrimaryPartCFrame(charRoot.CFrame * CFrame.new(3, 0, 0))
-	pet.Parent = workspace
-
-	showTooltip(petBaseName, currentRarity, "Newborn")
 end)
