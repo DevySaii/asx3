@@ -11,7 +11,22 @@ local UICorner_Spawn = Instance.new("UICorner")
 
 local petType = "NP"
 local typeButtons = {}
-local petTypes = {"NP", "R", "F", "FR", "Neon", "NR", "NF", "NFR", "M", "MR", "MF", "MFR"}
+
+-- Renamed display labels
+local petTypes = {
+    {key = "NP", label = "No Pot"},
+    {key = "R", label = "R"},
+    {key = "F", label = "F"},
+    {key = "FR", label = "FR"},
+    {key = "Neon", label = "Neon"},
+    {key = "NR", label = "NR"},
+    {key = "NF", label = "NF"},
+    {key = "NFR", label = "NFR"},
+    {key = "M", label = "M"},
+    {key = "MR", label = "MR"},
+    {key = "MF", label = "MF"},
+    {key = "MFR", label = "MFR"},
+}
 
 Spawner.Name = "SaiiScript"
 Spawner.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
@@ -21,7 +36,7 @@ Main.Name = "Main"
 Main.Parent = Spawner
 Main.AnchorPoint = Vector2.new(0.5, 0.5)
 Main.Position = UDim2.new(0.5, 0, 0.5, 0)
-Main.Size = UDim2.new(0, 500, 0, 320)
+Main.Size = UDim2.new(0, 500, 0, 360)
 Main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 
 UICorner.CornerRadius = UDim.new(0, 10)
@@ -36,25 +51,25 @@ Title.Text = "Saii's Script - Pet Spawner"
 Title.TextColor3 = Color3.fromRGB(0, 255, 100)
 Title.TextScaled = true
 
--- Create type buttons dynamically
+-- Type buttons container
 local buttonGrid = Instance.new("Frame")
 buttonGrid.Name = "TypeGrid"
 buttonGrid.Parent = Main
 buttonGrid.Position = UDim2.new(0.05, 0, 0.15, 0)
-buttonGrid.Size = UDim2.new(0.9, 0, 0.4, 0)
+buttonGrid.Size = UDim2.new(0.9, 0, 0.5, 0)
 buttonGrid.BackgroundTransparency = 1
 
 local UIGrid = Instance.new("UIGridLayout")
-UIGrid.CellSize = UDim2.new(0, 70, 0, 30)
+UIGrid.CellSize = UDim2.new(0, 100, 0, 30)
 UIGrid.CellPadding = UDim2.new(0, 5, 0, 5)
 UIGrid.FillDirectionMaxCells = 4
 UIGrid.SortOrder = Enum.SortOrder.LayoutOrder
 UIGrid.Parent = buttonGrid
 
-for _, typeName in ipairs(petTypes) do
+for _, pet in ipairs(petTypes) do
     local btn = Instance.new("TextButton")
-    btn.Name = typeName
-    btn.Text = typeName
+    btn.Name = pet.key
+    btn.Text = pet.label
     btn.Font = Enum.Font.Gotham
     btn.TextScaled = true
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -67,7 +82,7 @@ for _, typeName in ipairs(petTypes) do
     corner.Parent = btn
 
     btn.MouseButton1Click:Connect(function()
-        petType = typeName
+        petType = pet.key
         for _, b in pairs(typeButtons) do
             b.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
         end
@@ -80,7 +95,7 @@ end
 -- Name input
 NameBox.Name = "NameBox"
 NameBox.Parent = Main
-NameBox.Position = UDim2.new(0.5, 0, 0.65, 0)
+NameBox.Position = UDim2.new(0.5, 0, 0.7, 0)
 NameBox.AnchorPoint = Vector2.new(0.5, 0)
 NameBox.Size = UDim2.new(0.9, 0, 0.1, 0)
 NameBox.Font = Enum.Font.Gotham
@@ -96,7 +111,7 @@ UICorner_Name.Parent = NameBox
 -- Spawn button
 Spawn.Name = "Spawn"
 Spawn.Parent = Main
-Spawn.Position = UDim2.new(0.5, 0, 0.82, 0)
+Spawn.Position = UDim2.new(0.5, 0, 0.85, 0)
 Spawn.AnchorPoint = Vector2.new(0.5, 0)
 Spawn.Size = UDim2.new(0.5, 0, 0.1, 0)
 Spawn.Font = Enum.Font.GothamBold
