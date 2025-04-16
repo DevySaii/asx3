@@ -1,10 +1,20 @@
 --== Pet Changer UI ==--
 
+-- Existing Pet Name Label
+local labelOld = Instance.new("TextLabel", main)
+labelOld.Position = UDim2.new(0.05, 0, 0.93, 0)
+labelOld.Size = UDim2.new(0.27, 0, 0.03, 0)
+labelOld.BackgroundTransparency = 1
+labelOld.Text = "Existing Pet Name"
+labelOld.TextColor3 = Color3.fromRGB(200, 200, 200)
+labelOld.Font = Enum.Font.Gotham
+labelOld.TextScaled = true
+
 -- Replace Name Box
 local replaceBox = Instance.new("TextBox", main)
-replaceBox.Position = UDim2.new(0.05, 0, 0.95, 0)
+replaceBox.Position = UDim2.new(0.05, 0, 0.96, 0)
 replaceBox.Size = UDim2.new(0.27, 0, 0.07, 0)
-replaceBox.PlaceholderText = "Old Name"
+replaceBox.PlaceholderText = "e.g., Cat"
 replaceBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 replaceBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 replaceBox.Font = Enum.Font.Gotham
@@ -13,11 +23,21 @@ replaceBox.TextScaled = true
 local replaceCorner = Instance.new("UICorner", replaceBox)
 replaceCorner.CornerRadius = UDim.new(0, 6)
 
+-- New Pet Name Label
+local labelNew = Instance.new("TextLabel", main)
+labelNew.Position = UDim2.new(0.36, 0, 0.93, 0)
+labelNew.Size = UDim2.new(0.27, 0, 0.03, 0)
+labelNew.BackgroundTransparency = 1
+labelNew.Text = "Pet To Replace Existing Pet"
+labelNew.TextColor3 = Color3.fromRGB(200, 200, 200)
+labelNew.Font = Enum.Font.Gotham
+labelNew.TextScaled = true
+
 -- New Name Box
 local newBox = Instance.new("TextBox", main)
-newBox.Position = UDim2.new(0.36, 0, 0.95, 0)
+newBox.Position = UDim2.new(0.36, 0, 0.96, 0)
 newBox.Size = UDim2.new(0.27, 0, 0.07, 0)
-newBox.PlaceholderText = "New Name"
+newBox.PlaceholderText = "e.g., Bat Dragon"
 newBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 newBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 newBox.Font = Enum.Font.Gotham
@@ -28,7 +48,7 @@ newCorner.CornerRadius = UDim.new(0, 6)
 
 -- Change Button
 local changeBtn = Instance.new("TextButton", main)
-changeBtn.Position = UDim2.new(0.7, 0, 0.95, 0)
+changeBtn.Position = UDim2.new(0.7, 0, 0.96, 0)
 changeBtn.Size = UDim2.new(0.25, 0, 0.07, 0)
 changeBtn.Text = "🔄 Change"
 changeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
