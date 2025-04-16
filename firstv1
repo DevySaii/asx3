@@ -1,131 +1,53 @@
---== Saii's Script - Fancy Gradient Pet Spawner ==--
+--== Pet Changer UI ==--
 
-local player = game.Players.LocalPlayer
-local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-gui.Name = "SaiiSpawner"
-gui.ResetOnSpawn = false
+-- Replace Name Box
+local replaceBox = Instance.new("TextBox", main)
+replaceBox.Position = UDim2.new(0.05, 0, 0.95, 0)
+replaceBox.Size = UDim2.new(0.27, 0, 0.07, 0)
+replaceBox.PlaceholderText = "Old Name"
+replaceBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+replaceBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+replaceBox.Font = Enum.Font.Gotham
+replaceBox.TextScaled = true
 
--- Main frame
-local main = Instance.new("Frame", gui)
-main.Name = "Main"
-main.AnchorPoint = Vector2.new(0.5, 0.5)
-main.Position = UDim2.new(0.5, 0, 0.5, 0)
-main.Size = UDim2.new(0, 540, 0, 400)
-main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+local replaceCorner = Instance.new("UICorner", replaceBox)
+replaceCorner.CornerRadius = UDim.new(0, 6)
 
-local gradient = Instance.new("UIGradient", main)
-gradient.Color = ColorSequence.new{
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 20)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 100))
-}
-gradient.Rotation = 45
+-- New Name Box
+local newBox = Instance.new("TextBox", main)
+newBox.Position = UDim2.new(0.36, 0, 0.95, 0)
+newBox.Size = UDim2.new(0.27, 0, 0.07, 0)
+newBox.PlaceholderText = "New Name"
+newBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+newBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+newBox.Font = Enum.Font.Gotham
+newBox.TextScaled = true
 
-local mainCorner = Instance.new("UICorner", main)
-mainCorner.CornerRadius = UDim.new(0, 12)
+local newCorner = Instance.new("UICorner", newBox)
+newCorner.CornerRadius = UDim.new(0, 6)
 
--- Title
-local title = Instance.new("TextLabel", main)
-title.Size = UDim2.new(1, 0, 0, 40)
-title.BackgroundTransparency = 1
-title.Text = "🐾 Saii's Script - Pet Spawner"
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.Font = Enum.Font.GothamBold
-title.TextScaled = true
+-- Change Button
+local changeBtn = Instance.new("TextButton", main)
+changeBtn.Position = UDim2.new(0.7, 0, 0.95, 0)
+changeBtn.Size = UDim2.new(0.25, 0, 0.07, 0)
+changeBtn.Text = "🔄 Change"
+changeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+changeBtn.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
+changeBtn.Font = Enum.Font.GothamBold
+changeBtn.TextScaled = true
 
--- Grid for type buttons
-local gridFrame = Instance.new("Frame", main)
-gridFrame.Position = UDim2.new(0.05, 0, 0.13, 0)
-gridFrame.Size = UDim2.new(0.9, 0, 0.5, 0)
-gridFrame.BackgroundTransparency = 1
+local changeCorner = Instance.new("UICorner", changeBtn)
+changeCorner.CornerRadius = UDim.new(0, 6)
 
-local gridLayout = Instance.new("UIGridLayout", gridFrame)
-gridLayout.CellSize = UDim2.new(0, 120, 0, 34)
-gridLayout.CellPadding = UDim2.new(0, 5, 0, 5)
-gridLayout.FillDirectionMaxCells = 4
+-- Replace pet logic
+changeBtn.MouseButton1Click:Connect(function()
+	local oldName = replaceBox.Text
+	local newName = newBox.Text
+	if oldName == "" or newName == "" then return end
 
--- TextBox for name input
-local nameBox = Instance.new("TextBox", main)
-nameBox.Position = UDim2.new(0.5, 0, 0.7, 0)
-nameBox.AnchorPoint = Vector2.new(0.5, 0)
-nameBox.Size = UDim2.new(0.85, 0, 0.1, 0)
-nameBox.PlaceholderText = "Enter Pet Name"
-nameBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-nameBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-nameBox.Font = Enum.Font.Gotham
-nameBox.TextScaled = true
-
-local nameCorner = Instance.new("UICorner", nameBox)
-nameCorner.CornerRadius = UDim.new(0, 8)
-
--- Spawn button
-local spawnBtn = Instance.new("TextButton", main)
-spawnBtn.Position = UDim2.new(0.5, 0, 0.85, 0)
-spawnBtn.AnchorPoint = Vector2.new(0.5, 0)
-spawnBtn.Size = UDim2.new(0.5, 0, 0.1, 0)
-spawnBtn.Text = "✨ Spawn"
-spawnBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-spawnBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
-spawnBtn.Font = Enum.Font.GothamBold
-spawnBtn.TextScaled = true
-
-local spawnCorner = Instance.new("UICorner", spawnBtn)
-spawnCorner.CornerRadius = UDim.new(0, 8)
-
--- Pet type logic
-local petType = "NP"
-local typeButtons = {}
-local petTypes = {
-	{key = "NP", label = "No Pot"},
-	{key = "R", label = "R"},
-	{key = "F", label = "F"},
-	{key = "FR", label = "FR"},
-	{key = "Neon", label = "Neon"},
-	{key = "NR", label = "NR"},
-	{key = "NF", label = "NF"},
-	{key = "NFR", label = "NFR"},
-	{key = "M", label = "M"},
-	{key = "MR", label = "MR"},
-	{key = "MF", label = "MF"},
-	{key = "MFR", label = "MFR"},
-}
-
-for _, pet in ipairs(petTypes) do
-	local btn = Instance.new("TextButton", gridFrame)
-	btn.Text = pet.label
-	btn.Font = Enum.Font.Gotham
-	btn.TextScaled = true
-	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-	btn.AutoButtonColor = true
-
-	local corner = Instance.new("UICorner", btn)
-	corner.CornerRadius = UDim.new(0, 6)
-
-	btn.MouseButton1Click:Connect(function()
-		petType = pet.key
-		for _, b in pairs(typeButtons) do
-			b.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-		end
-		btn.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
-	end)
-
-	table.insert(typeButtons, btn)
-end
-
--- Pet spawn logic
-local function duplicatePet(petName)
 	local Fsys = require(game.ReplicatedStorage.Fsys)
 	local ClientData = Fsys.load("ClientData")
-	local InventoryDB = Fsys.load("InventoryDB")
 	local Inventory = ClientData.get("inventory")
-
-	local function clone(tbl)
-		local new = {}
-		for k, v in pairs(tbl) do
-			new[k] = typeof(v) == "table" and clone(v) or v
-		end
-		return new
-	end
 
 	local function getProps()
 		return {
@@ -137,53 +59,10 @@ local function duplicatePet(petName)
 		}
 	end
 
-	for cat, items in pairs(InventoryDB) do
-		if cat == "pets" then
-			for id, item in pairs(items) do
-				if item.name == petName then
-					local uuid = game.HttpService:GenerateGUID(false)
-					local petClone = clone(item)
-					petClone["unique"] = "uuid_" .. uuid
-					petClone["category"] = "pets"
-					petClone["properties"] = getProps()
-					petClone["newness_order"] = math.random(1, 999999)
-
-					Inventory[cat] = Inventory[cat] or {}
-					Inventory[cat][uuid] = petClone
-					return
-				end
-			end
+	for id, item in pairs(Inventory.pets or {}) do
+		if item.name == oldName then
+			item.name = newName
+			item.properties = getProps()
 		end
-	end
-end
-
--- Trigger spawn
-spawnBtn.MouseButton1Click:Connect(function()
-	local name = nameBox.Text
-	if name ~= "" then
-		duplicatePet(name)
-	end
-end)
-
--- Draggable UI
-local UIS = game:GetService("UserInputService")
-local dragging = false
-local dragStart, startPos
-
-main.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = true
-		dragStart = input.Position
-		startPos = main.Position
-		input.Changed:Connect(function()
-			if input.UserInputState == Enum.UserInputState.End then dragging = false end
-		end)
-	end
-end)
-
-main.InputChanged:Connect(function(input)
-	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-		local delta = input.Position - dragStart
-		main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 	end
 end)
