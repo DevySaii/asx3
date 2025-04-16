@@ -1,4 +1,4 @@
--- Gui to Lua (Saii's Script)
+-- Saii's Script - Working Version with Tooltip
 
 local Spawner = Instance.new("ScreenGui")
 local Main = Instance.new("Frame")
@@ -8,24 +8,21 @@ local NameBox = Instance.new("TextBox")
 local UICorner_Name = Instance.new("UICorner")
 local Spawn = Instance.new("TextButton")
 local UICorner_Spawn = Instance.new("UICorner")
+local InfoBox = Instance.new("Frame")
+local InfoCorner = Instance.new("UICorner")
+local PetName = Instance.new("TextLabel")
+local PetRarity = Instance.new("TextLabel")
+local PetAge = Instance.new("TextLabel")
+local buttonGrid = Instance.new("Frame")
+local UIGrid = Instance.new("UIGridLayout")
 
 local petType = "NP"
 local typeButtons = {}
-
--- Renamed display labels
 local petTypes = {
-    {key = "NP", label = "No Pot"},
-    {key = "R", label = "R"},
-    {key = "F", label = "F"},
-    {key = "FR", label = "FR"},
-    {key = "Neon", label = "Neon"},
-    {key = "NR", label = "NR"},
-    {key = "NF", label = "NF"},
-    {key = "NFR", label = "NFR"},
-    {key = "M", label = "M"},
-    {key = "MR", label = "MR"},
-    {key = "MF", label = "MF"},
-    {key = "MFR", label = "MFR"},
+    {key = "NP", label = "No Pot"}, {key = "R", label = "R"}, {key = "F", label = "F"},
+    {key = "FR", label = "FR"}, {key = "Neon", label = "Neon"}, {key = "NR", label = "NR"},
+    {key = "NF", label = "NF"}, {key = "NFR", label = "NFR"}, {key = "M", label = "M"},
+    {key = "MR", label = "MR"}, {key = "MF", label = "MF"}, {key = "MFR", label = "MFR"},
 }
 
 Spawner.Name = "SaiiScript"
@@ -36,7 +33,7 @@ Main.Name = "Main"
 Main.Parent = Spawner
 Main.AnchorPoint = Vector2.new(0.5, 0.5)
 Main.Position = UDim2.new(0.5, 0, 0.5, 0)
-Main.Size = UDim2.new(0, 500, 0, 360)
+Main.Size = UDim2.new(0, 500, 0, 400)
 Main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 
 UICorner.CornerRadius = UDim.new(0, 10)
@@ -51,15 +48,12 @@ Title.Text = "Saii's Script - Pet Spawner"
 Title.TextColor3 = Color3.fromRGB(0, 255, 100)
 Title.TextScaled = true
 
--- Type buttons container
-local buttonGrid = Instance.new("Frame")
 buttonGrid.Name = "TypeGrid"
 buttonGrid.Parent = Main
-buttonGrid.Position = UDim2.new(0.05, 0, 0.15, 0)
-buttonGrid.Size = UDim2.new(0.9, 0, 0.5, 0)
+buttonGrid.Position = UDim2.new(0.05, 0, 0.13, 0)
+buttonGrid.Size = UDim2.new(0.9, 0, 0.4, 0)
 buttonGrid.BackgroundTransparency = 1
 
-local UIGrid = Instance.new("UIGridLayout")
 UIGrid.CellSize = UDim2.new(0, 100, 0, 30)
 UIGrid.CellPadding = UDim2.new(0, 5, 0, 5)
 UIGrid.FillDirectionMaxCells = 4
@@ -92,10 +86,9 @@ for _, pet in ipairs(petTypes) do
     table.insert(typeButtons, btn)
 end
 
--- Name input
 NameBox.Name = "NameBox"
 NameBox.Parent = Main
-NameBox.Position = UDim2.new(0.5, 0, 0.7, 0)
+NameBox.Position = UDim2.new(0.5, 0, 0.6, 0)
 NameBox.AnchorPoint = Vector2.new(0.5, 0)
 NameBox.Size = UDim2.new(0.9, 0, 0.1, 0)
 NameBox.Font = Enum.Font.Gotham
@@ -108,10 +101,9 @@ NameBox.TextScaled = true
 UICorner_Name.CornerRadius = UDim.new(0, 6)
 UICorner_Name.Parent = NameBox
 
--- Spawn button
 Spawn.Name = "Spawn"
 Spawn.Parent = Main
-Spawn.Position = UDim2.new(0.5, 0, 0.85, 0)
+Spawn.Position = UDim2.new(0.5, 0, 0.72, 0)
 Spawn.AnchorPoint = Vector2.new(0.5, 0)
 Spawn.Size = UDim2.new(0.5, 0, 0.1, 0)
 Spawn.Font = Enum.Font.GothamBold
@@ -123,7 +115,62 @@ Spawn.TextScaled = true
 UICorner_Spawn.CornerRadius = UDim.new(0, 6)
 UICorner_Spawn.Parent = Spawn
 
--- Logic for spawning pets
+-- Tooltip
+InfoBox.Name = "InfoBox"
+InfoBox.Parent = Main
+InfoBox.AnchorPoint = Vector2.new(0, 0)
+InfoBox.Position = UDim2.new(0.05, 0, 0.85, 0)
+InfoBox.Size = UDim2.new(0.9, 0, 0.12, 0)
+InfoBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+InfoBox.BorderSizePixel = 0
+InfoBox.Visible = false
+InfoBox.ZIndex = 10
+
+InfoCorner.CornerRadius = UDim.new(0, 8)
+InfoCorner.Parent = InfoBox
+
+PetName.Name = "PetName"
+PetName.Parent = InfoBox
+PetName.Position = UDim2.new(0, 5, 0, 3)
+PetName.Size = UDim2.new(1, -10, 0.33, 0)
+PetName.BackgroundTransparency = 1
+PetName.Font = Enum.Font.GothamBold
+PetName.TextColor3 = Color3.fromRGB(255, 255, 255)
+PetName.TextScaled = true
+PetName.Text = ""
+
+PetRarity.Name = "PetRarity"
+PetRarity.Parent = InfoBox
+PetRarity.Position = UDim2.new(0, 5, 0.33, 2)
+PetRarity.Size = UDim2.new(1, -10, 0.33, 0)
+PetRarity.BackgroundTransparency = 1
+PetRarity.Font = Enum.Font.Gotham
+PetRarity.TextColor3 = Color3.fromRGB(255, 100, 100)
+PetRarity.TextScaled = true
+PetRarity.Text = ""
+
+PetAge.Name = "PetAge"
+PetAge.Parent = InfoBox
+PetAge.Position = UDim2.new(0, 5, 0.66, 1)
+PetAge.Size = UDim2.new(1, -10, 0.3, 0)
+PetAge.BackgroundTransparency = 1
+PetAge.Font = Enum.Font.Gotham
+PetAge.TextColor3 = Color3.fromRGB(200, 200, 200)
+PetAge.TextScaled = true
+PetAge.Text = ""
+
+-- Tooltip update
+local function updateTooltip(name, rarity, age)
+    PetName.Text = name
+    PetRarity.Text = "◆ " .. rarity
+    PetAge.Text = "Age: " .. age
+    InfoBox.Visible = true
+    task.delay(5, function()
+        InfoBox.Visible = false
+    end)
+end
+
+-- Logic
 local function duplicatePet(petName)
     local Loads = require(game.ReplicatedStorage.Fsys).load
     local ClientData = Loads("ClientData")
@@ -161,10 +208,15 @@ local function duplicatePet(petName)
 
                 Inventory[category_name] = Inventory[category_name] or {}
                 Inventory[category_name][uuid] = n_item
+
+                updateTooltip(item.name, item.rarity or "Unknown", "Newborn")
                 return
             end
         end
     end
+
+    -- Show tooltip even if not found
+    updateTooltip(petName, "Not Found", "-")
 end
 
 Spawn.MouseButton1Click:Connect(function()
@@ -174,7 +226,7 @@ Spawn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Make draggable
+-- Draggable
 local UIS = game:GetService("UserInputService")
 local dragging, dragStart, startPos
 
@@ -184,15 +236,13 @@ Main.InputBegan:Connect(function(input)
         dragStart = input.Position
         startPos = Main.Position
         input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
         end)
     end
 end)
 
 Main.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement) then
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
         local delta = input.Position - dragStart
         Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
