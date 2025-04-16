@@ -1,55 +1,71 @@
---== Pet Changer UI ==--
+local player = game.Players.LocalPlayer
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+gui.Name = "PetChangerGUI"
+gui.ResetOnSpawn = false
 
--- Existing Pet Name Label
-local labelOld = Instance.new("TextLabel", main)
-labelOld.Position = UDim2.new(0.05, 0, 0.78, 0)
-labelOld.Size = UDim2.new(0.27, 0, 0.03, 0)
-labelOld.BackgroundTransparency = 1
-labelOld.Text = "Existing Pet Name"
-labelOld.TextColor3 = Color3.fromRGB(200, 200, 200)
-labelOld.Font = Enum.Font.Gotham
-labelOld.TextScaled = true
+-- Main UI Frame
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0.5, 0, 0.25, 0)
+main.Position = UDim2.new(0.25, 0, 0.7, 0)
+main.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+main.BorderSizePixel = 0
 
--- Replace Name Box
-local replaceBox = Instance.new("TextBox", main)
-replaceBox.Position = UDim2.new(0.05, 0, 0.81, 0)
-replaceBox.Size = UDim2.new(0.27, 0, 0.07, 0)
-replaceBox.PlaceholderText = "e.g., Cat"
-replaceBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-replaceBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-replaceBox.Font = Enum.Font.Gotham
-replaceBox.TextScaled = true
+local mainCorner = Instance.new("UICorner", main)
+mainCorner.CornerRadius = UDim.new(0, 12)
 
-local replaceCorner = Instance.new("UICorner", replaceBox)
-replaceCorner.CornerRadius = UDim.new(0, 6)
+-- UI Padding
+local padding = Instance.new("UIPadding", main)
+padding.PaddingTop = UDim.new(0, 12)
+padding.PaddingBottom = UDim.new(0, 12)
+padding.PaddingLeft = UDim.new(0, 16)
+padding.PaddingRight = UDim.new(0, 16)
 
--- New Pet Name Label
-local labelNew = Instance.new("TextLabel", main)
-labelNew.Position = UDim2.new(0.36, 0, 0.78, 0)
-labelNew.Size = UDim2.new(0.27, 0, 0.03, 0)
-labelNew.BackgroundTransparency = 1
-labelNew.Text = "Pet To Replace Existing Pet"
-labelNew.TextColor3 = Color3.fromRGB(200, 200, 200)
-labelNew.Font = Enum.Font.Gotham
-labelNew.TextScaled = true
+-- Layout
+local layout = Instance.new("UIListLayout", main)
+layout.Padding = UDim.new(0, 8)
+layout.FillDirection = Enum.FillDirection.Horizontal
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+layout.VerticalAlignment = Enum.VerticalAlignment.Center
 
--- New Name Box
-local newBox = Instance.new("TextBox", main)
-newBox.Position = UDim2.new(0.36, 0, 0.81, 0)
-newBox.Size = UDim2.new(0.27, 0, 0.07, 0)
-newBox.PlaceholderText = "e.g., Bat Dragon"
-newBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-newBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-newBox.Font = Enum.Font.Gotham
-newBox.TextScaled = true
+-- Helper function to create labeled textboxes
+local function createLabeledBox(labelText, placeholderText)
+	local container = Instance.new("Frame")
+	container.Size = UDim2.new(0.3, 0, 1, -24)
+	container.BackgroundTransparency = 1
 
-local newCorner = Instance.new("UICorner", newBox)
-newCorner.CornerRadius = UDim.new(0, 6)
+	local label = Instance.new("TextLabel", container)
+	label.Size = UDim2.new(1, 0, 0.35, 0)
+	label.BackgroundTransparency = 1
+	label.Text = labelText
+	label.TextColor3 = Color3.fromRGB(180, 180, 180)
+	label.Font = Enum.Font.Gotham
+	label.TextScaled = true
+
+	local textbox = Instance.new("TextBox", container)
+	textbox.Size = UDim2.new(1, 0, 0.6, 0)
+	textbox.Position = UDim2.new(0, 0, 0.4, 0)
+	textbox.PlaceholderText = placeholderText
+	textbox.TextColor3 = Color3.fromRGB(255, 255, 255)
+	textbox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	textbox.Font = Enum.Font.Gotham
+	textbox.TextScaled = true
+
+	local corner = Instance.new("UICorner", textbox)
+	corner.CornerRadius = UDim.new(0, 6)
+
+	return container, textbox
+end
+
+-- Create Inputs
+local oldContainer, replaceBox = createLabeledBox("Existing Pet Name", "e.g., Cat")
+local newContainer, newBox = createLabeledBox("New Pet Name", "e.g., Bat Dragon")
+
+oldContainer.Parent = main
+newContainer.Parent = main
 
 -- Change Button
 local changeBtn = Instance.new("TextButton", main)
-changeBtn.Position = UDim2.new(0.7, 0, 0.81, 0)
-changeBtn.Size = UDim2.new(0.25, 0, 0.07, 0)
+changeBtn.Size = UDim2.new(0.3, 0, 1, -24)
 changeBtn.Text = "🔄 Change"
 changeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 changeBtn.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
@@ -57,32 +73,50 @@ changeBtn.Font = Enum.Font.GothamBold
 changeBtn.TextScaled = true
 
 local changeCorner = Instance.new("UICorner", changeBtn)
-changeCorner.CornerRadius = UDim.new(0, 6)
+changeCorner.CornerRadius = UDim.new(0, 8)
 
--- Replace pet logic
+-- Glow effect
+local glow = Instance.new("UIStroke", changeBtn)
+glow.Thickness = 2
+glow.Color = Color3.fromRGB(255, 150, 150)
+
+-- Logic
 changeBtn.MouseButton1Click:Connect(function()
 	local oldName = replaceBox.Text
 	local newName = newBox.Text
-	if oldName == "" or newName == "" then return end
-
-	local Fsys = require(game.ReplicatedStorage.Fsys)
-	local ClientData = Fsys.load("ClientData")
-	local Inventory = ClientData.get("inventory")
-
-	local function getProps()
-		return {
-			rideable = petType:find("R") and true or false,
-			flyable = petType:find("F") and true or false,
-			neon = petType:find("N") and true or false,
-			mega_neon = petType:find("M") and true or false,
-			age = 1
-		}
+	if oldName == "" or newName == "" then
+		warn("Both fields are required.")
+		return
 	end
 
-	for id, item in pairs(Inventory.pets or {}) do
-		if item.name == oldName then
-			item.name = newName
-			item.properties = getProps()
+	local success, err = pcall(function()
+		local Fsys = require(game.ReplicatedStorage:WaitForChild("Fsys"))
+		local ClientData = Fsys.load("ClientData")
+		local Inventory = ClientData.get("inventory")
+
+		local petType = newName
+
+		local function getProps()
+			return {
+				rideable = petType:find("R") and true or false,
+				flyable = petType:find("F") and true or false,
+				neon = petType:find("N") and true or false,
+				mega_neon = petType:find("M") and true or false,
+				age = 1
+			}
 		end
+
+		for id, item in pairs(Inventory.pets or {}) do
+			if item.name == oldName then
+				item.name = newName
+				item.properties = getProps()
+			end
+		end
+	end)
+
+	if success then
+		print("Pet renamed successfully.")
+	else
+		warn("Rename failed:", err)
 	end
 end)
