@@ -1,84 +1,184 @@
+-- Gui to Lua (Saii's Script)
+
+local Spawner = Instance.new("ScreenGui")
+local Main = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local UICorner = Instance.new("UICorner")
+local NameBox = Instance.new("TextBox")
+local UICorner_Name = Instance.new("UICorner")
+local Spawn = Instance.new("TextButton")
+local UICorner_Spawn = Instance.new("UICorner")
+
+local petType = "NP"
+local typeButtons = {}
+local petTypes = {"NP", "R", "F", "FR", "Neon", "NR", "NF", "NFR", "M", "MR", "MF", "MFR"}
+
+Spawner.Name = "SaiiScript"
+Spawner.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+Spawner.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+Main.Name = "Main"
+Main.Parent = Spawner
+Main.AnchorPoint = Vector2.new(0.5, 0.5)
+Main.Position = UDim2.new(0.5, 0, 0.5, 0)
+Main.Size = UDim2.new(0, 500, 0, 320)
+Main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+
+UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.Parent = Main
+
+Title.Name = "Title"
+Title.Parent = Main
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundTransparency = 1
+Title.Font = Enum.Font.GothamBold
+Title.Text = "Saii's Script - Pet Spawner"
+Title.TextColor3 = Color3.fromRGB(0, 255, 100)
+Title.TextScaled = true
+
+-- Create type buttons dynamically
+local buttonGrid = Instance.new("Frame")
+buttonGrid.Name = "TypeGrid"
+buttonGrid.Parent = Main
+buttonGrid.Position = UDim2.new(0.05, 0, 0.15, 0)
+buttonGrid.Size = UDim2.new(0.9, 0, 0.4, 0)
+buttonGrid.BackgroundTransparency = 1
+
+local UIGrid = Instance.new("UIGridLayout")
+UIGrid.CellSize = UDim2.new(0, 70, 0, 30)
+UIGrid.CellPadding = UDim2.new(0, 5, 0, 5)
+UIGrid.FillDirectionMaxCells = 4
+UIGrid.SortOrder = Enum.SortOrder.LayoutOrder
+UIGrid.Parent = buttonGrid
+
+for _, typeName in ipairs(petTypes) do
+    local btn = Instance.new("TextButton")
+    btn.Name = typeName
+    btn.Text = typeName
+    btn.Font = Enum.Font.Gotham
+    btn.TextScaled = true
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    btn.AutoButtonColor = true
+    btn.Parent = buttonGrid
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
+
+    btn.MouseButton1Click:Connect(function()
+        petType = typeName
+        for _, b in pairs(typeButtons) do
+            b.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        end
+        btn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+    end)
+
+    table.insert(typeButtons, btn)
+end
+
+-- Name input
+NameBox.Name = "NameBox"
+NameBox.Parent = Main
+NameBox.Position = UDim2.new(0.5, 0, 0.65, 0)
+NameBox.AnchorPoint = Vector2.new(0.5, 0)
+NameBox.Size = UDim2.new(0.9, 0, 0.1, 0)
+NameBox.Font = Enum.Font.Gotham
+NameBox.PlaceholderText = "Enter Pet Name"
+NameBox.Text = ""
+NameBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+NameBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+NameBox.TextScaled = true
+
+UICorner_Name.CornerRadius = UDim.new(0, 6)
+UICorner_Name.Parent = NameBox
+
+-- Spawn button
+Spawn.Name = "Spawn"
+Spawn.Parent = Main
+Spawn.Position = UDim2.new(0.5, 0, 0.82, 0)
+Spawn.AnchorPoint = Vector2.new(0.5, 0)
+Spawn.Size = UDim2.new(0.5, 0, 0.1, 0)
+Spawn.Font = Enum.Font.GothamBold
+Spawn.Text = "Spawn"
+Spawn.TextColor3 = Color3.fromRGB(255, 255, 255)
+Spawn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+Spawn.TextScaled = true
+
+UICorner_Spawn.CornerRadius = UDim.new(0, 6)
+UICorner_Spawn.Parent = Spawn
+
+-- Logic for spawning pets
 local function duplicatePet(petName)
     local Loads = require(game.ReplicatedStorage.Fsys).load
     local ClientData = Loads("ClientData")
     local InventoryDB = Loads("InventoryDB")
     local Inventory = ClientData.get("inventory")
-    local PetHandler = Loads("PetHandler")
-    local RideRemote = game.ReplicatedStorage:FindFirstChild("RidePetRemote")
-
-    if not RideRemote then
-        warn("❌ RidePetRemote not found in ReplicatedStorage.")
-        return false
-    end
 
     local function generate_prop()
         return {
-            flyable = true,
-            rideable = true,
-            neon = petType == "NFR" or petType == "MFR",
-            mega_neon = petType == "MFR",
-            age = 1
+            rideable = string.find(petType, "R") ~= nil,
+            flyable = string.find(petType, "F") ~= nil,
+            neon = string.find(petType, "N") ~= nil,
+            mega_neon = string.find(petType, "M") ~= nil,
+            age = 1,
         }
     end
 
     local function cloneTable(original)
         local copy = {}
         for key, value in pairs(original) do
-            if type(value) == "table" then
-                copy[key] = cloneTable(value)
-            else
-                copy[key] = value
-            end
+            copy[key] = typeof(value) == "table" and cloneTable(value) or value
         end
         return copy
     end
 
     for category_name, category_table in pairs(InventoryDB) do
         for id, item in pairs(category_table) do
-            if category_name == "pets" and item.name:lower() == petName:lower() then
-                local rawUUID = game.HttpService:GenerateGUID(false)
-                local fullUUID = "uuid_" .. rawUUID
+            if category_name == "pets" and item.name == petName then
+                local uuid = game.HttpService:GenerateGUID(false)
                 local n_item = cloneTable(item)
 
-                n_item["unique"] = fullUUID
+                n_item["unique"] = "uuid_" .. uuid
                 n_item["category"] = "pets"
                 n_item["properties"] = generate_prop()
                 n_item["newness_order"] = math.random(1, 900000)
 
-                if not Inventory[category_name] then
-                    Inventory[category_name] = {}
-                end
-
-                Inventory[category_name][fullUUID] = n_item
-                print("✅ Added pet to inventory with UUID:", fullUUID)
-
-                -- Try equipping
-                local success, err = pcall(function()
-                    PetHandler.equip(fullUUID)
-                end)
-
-                if not success then
-                    warn("❌ Failed to equip pet:", err)
-                else
-                    print("✅ Pet equipped.")
-                end
-
-                -- Then ride
-                task.delay(0.3, function()
-                    local success2, err2 = pcall(function()
-                        RideRemote:FireServer(fullUUID)
-                        print("✅ RideRemote fired for:", fullUUID)
-                    end)
-
-                    if not success2 then
-                        warn("❌ Failed to ride pet:", err2)
-                    end
-                end)
-
-                return true
+                Inventory[category_name] = Inventory[category_name] or {}
+                Inventory[category_name][uuid] = n_item
+                return
             end
         end
     end
-
-    return false
 end
+
+Spawn.MouseButton1Click:Connect(function()
+    local name = NameBox.Text
+    if name ~= "" then
+        duplicatePet(name)
+    end
+end)
+
+-- Make draggable
+local UIS = game:GetService("UserInputService")
+local dragging, dragStart, startPos
+
+Main.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = Main.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+Main.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement) then
+        local delta = input.Position - dragStart
+        Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
