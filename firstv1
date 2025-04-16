@@ -1,0 +1,62 @@
+local function duplicatePet(petName)
+    local Loads = require(game.ReplicatedStorage.Fsys).load
+    local ClientData = Loads("ClientData")
+    local InventoryDB = Loads("InventoryDB")
+    local Inventory = ClientData.get("inventory")
+    local PetHandler = Loads("PetHandler")
+    local RideRemote = game.ReplicatedStorage:WaitForChild("RidePetRemote") -- Adjust if needed
+
+    local function generate_prop()
+        return {
+            flyable = true,
+            rideable = true,
+            neon = petType == "NFR" or petType == "MFR",
+            mega_neon = petType == "MFR",
+            age = 1
+        }
+    end
+
+    local function cloneTable(original)
+        local copy = {}
+        for key, value in pairs(original) do
+            if type(value) == "table" then
+                copy[key] = cloneTable(value)
+            else
+                copy[key] = value
+            end
+        end
+        return copy
+    end
+
+    for category_name, category_table in pairs(InventoryDB) do
+        for id, item in pairs(category_table) do
+            if category_name == "pets" and item.name:lower() == petName:lower() then
+                local fake_uuid = game.HttpService:GenerateGUID(false)
+                local n_item = cloneTable(item)
+
+                n_item["unique"] = "uuid_" .. fake_uuid
+                n_item["category"] = "pets"
+                n_item["properties"] = generate_prop()
+                n_item["newness_order"] = math.random(1, 900000)
+
+                if not Inventory[category_name] then
+                    Inventory[category_name] = {}
+                end
+
+                Inventory[category_name][fake_uuid] = n_item
+
+                -- ✅ Equip the pet
+                PetHandler.equip("uuid_" .. fake_uuid)
+
+                -- ✅ Wait a bit then ride it
+                task.delay(0.3, function()
+                    RideRemote:FireServer("uuid_" .. fake_uuid)
+                end)
+
+                return true
+            end
+        end
+    end
+
+    return false
+end
