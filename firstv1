@@ -1,221 +1,66 @@
-local Spawner = Instance.new("ScreenGui")
-local Main = Instance.new("Frame")
-local Title = Instance.new("TextLabel")
-local UICorner = Instance.new("UICorner")
-local NameBox = Instance.new("TextBox")
-local UICorner_Name = Instance.new("UICorner")
-local Spawn = Instance.new("TextButton")
-local UICorner_Spawn = Instance.new("UICorner")
-local InfoBox = Instance.new("Frame")
-local InfoCorner = Instance.new("UICorner")
-local PetName = Instance.new("TextLabel")
-local PetRarity = Instance.new("TextLabel")
-local PetAge = Instance.new("TextLabel")
-local buttonGrid = Instance.new("Frame")
-local UIGrid = Instance.new("UIGridLayout")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
 
-local petType = "NP"
-local typeButtons = {}
-local petTypes = {
-    {key = "NP", label = "No Pot"}, {key = "R", label = "R"}, {key = "F", label = "F"},
-    {key = "FR", label = "FR"}, {key = "Neon", label = "Neon"}, {key = "NR", label = "NR"},
-    {key = "NF", label = "NF"}, {key = "NFR", label = "NFR"}, {key = "M", label = "M"},
-    {key = "MR", label = "MR"}, {key = "MF", label = "MF"}, {key = "MFR", label = "MFR"},
+local petNameBox = script.Parent:WaitForChild("PetNameBox")
+local spawnBtn = script.Parent:WaitForChild("SpawnBtn")
+local tooltip = script.Parent:WaitForChild("Tooltip")
+local rarityButtons = {
+    NP = script.Parent:WaitForChild("NP"),
+    R = script.Parent:WaitForChild("R"),
+    F = script.Parent:WaitForChild("F"),
+    FR = script.Parent:WaitForChild("FR"),
+    Neon = script.Parent:WaitForChild("Neon"),
+    NR = script.Parent:WaitForChild("NR"),
+    NF = script.Parent:WaitForChild("NF"),
+    NFR = script.Parent:WaitForChild("NFR"),
+    M = script.Parent:WaitForChild("M"),
+    MR = script.Parent:WaitForChild("MR"),
+    MF = script.Parent:WaitForChild("MF"),
+    MFR = script.Parent:WaitForChild("MFR"),
 }
 
-Spawner.Name = "SaiiScript"
-Spawner.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-Spawner.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+local currentSuffix = ""
 
-Main.Name = "Main"
-Main.Parent = Spawner
-Main.AnchorPoint = Vector2.new(0.5, 0.5)
-Main.Position = UDim2.new(0.5, 0, 0.5, 0)
-Main.Size = UDim2.new(0, 500, 0, 400)
-Main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-
-UICorner.CornerRadius = UDim.new(0, 10)
-UICorner.Parent = Main
-
-Title.Name = "Title"
-Title.Parent = Main
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.BackgroundTransparency = 1
-Title.Font = Enum.Font.GothamBold
-Title.Text = "Saii's Script - Pet Spawner"
-Title.TextColor3 = Color3.fromRGB(0, 255, 100)
-Title.TextScaled = true
-
-buttonGrid.Name = "TypeGrid"
-buttonGrid.Parent = Main
-buttonGrid.Position = UDim2.new(0.05, 0, 0.13, 0)
-buttonGrid.Size = UDim2.new(0.9, 0, 0.4, 0)
-buttonGrid.BackgroundTransparency = 1
-
-UIGrid.CellSize = UDim2.new(0, 100, 0, 30)
-UIGrid.CellPadding = UDim2.new(0, 5, 0, 5)
-UIGrid.FillDirectionMaxCells = 4
-UIGrid.SortOrder = Enum.SortOrder.LayoutOrder
-UIGrid.Parent = buttonGrid
-
-for _, pet in ipairs(petTypes) do
-    local btn = Instance.new("TextButton")
-    btn.Name = pet.key
-    btn.Text = pet.label
-    btn.Font = Enum.Font.Gotham
-    btn.TextScaled = true
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    btn.AutoButtonColor = true
-    btn.Parent = buttonGrid
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = btn
-
-    btn.MouseButton1Click:Connect(function()
-        petType = pet.key
-        for _, b in pairs(typeButtons) do
-            b.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        end
-        btn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
-    end)
-
-    table.insert(typeButtons, btn)
-end
-
-NameBox.Name = "NameBox"
-NameBox.Parent = Main
-NameBox.Position = UDim2.new(0.5, 0, 0.6, 0)
-NameBox.AnchorPoint = Vector2.new(0.5, 0)
-NameBox.Size = UDim2.new(0.9, 0, 0.1, 0)
-NameBox.Font = Enum.Font.Gotham
-NameBox.PlaceholderText = "Enter Pet Name"
-NameBox.Text = ""
-NameBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-NameBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-NameBox.TextScaled = true
-
-UICorner_Name.CornerRadius = UDim.new(0, 6)
-UICorner_Name.Parent = NameBox
-
-Spawn.Name = "Spawn"
-Spawn.Parent = Main
-Spawn.Position = UDim2.new(0.5, 0, 0.72, 0)
-Spawn.AnchorPoint = Vector2.new(0.5, 0)
-Spawn.Size = UDim2.new(0.5, 0, 0.1, 0)
-Spawn.Font = Enum.Font.GothamBold
-Spawn.Text = "Spawn"
-Spawn.TextColor3 = Color3.fromRGB(255, 255, 255)
-Spawn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
-Spawn.TextScaled = true
-
-UICorner_Spawn.CornerRadius = UDim.new(0, 6)
-UICorner_Spawn.Parent = Spawn
-
--- Tooltip
-InfoBox.Name = "InfoBox"
-InfoBox.Parent = Main
-InfoBox.AnchorPoint = Vector2.new(0, 0)
-InfoBox.Position = UDim2.new(0.05, 0, 0.85, 0)
-InfoBox.Size = UDim2.new(0.9, 0, 0.12, 0)
-InfoBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-InfoBox.BorderSizePixel = 0
-InfoBox.Visible = false
-InfoBox.ZIndex = 10
-
-InfoCorner.CornerRadius = UDim.new(0, 8)
-InfoCorner.Parent = InfoBox
-
-PetName.Name = "PetName"
-PetName.Parent = InfoBox
-PetName.Position = UDim2.new(0, 5, 0, 3)
-PetName.Size = UDim2.new(1, -10, 0.33, 0)
-PetName.BackgroundTransparency = 1
-PetName.Font = Enum.Font.GothamBold
-PetName.TextColor3 = Color3.fromRGB(255, 255, 255)
-PetName.TextScaled = true
-PetName.Text = ""
-
-PetRarity.Name = "PetRarity"
-PetRarity.Parent = InfoBox
-PetRarity.Position = UDim2.new(0, 5, 0.33, 2)
-PetRarity.Size = UDim2.new(1, -10, 0.33, 0)
-PetRarity.BackgroundTransparency = 1
-PetRarity.Font = Enum.Font.Gotham
-PetRarity.TextColor3 = Color3.fromRGB(255, 100, 100)
-PetRarity.TextScaled = true
-PetRarity.Text = ""
-
-PetAge.Name = "PetAge"
-PetAge.Parent = InfoBox
-PetAge.Position = UDim2.new(0, 5, 0.66, 1)
-PetAge.Size = UDim2.new(1, -10, 0.3, 0)
-PetAge.BackgroundTransparency = 1
-PetAge.Font = Enum.Font.Gotham
-PetAge.TextColor3 = Color3.fromRGB(200, 200, 200)
-PetAge.TextScaled = true
-PetAge.Text = ""
-
--- Tooltip update
+-- Function to update tooltip text
 local function updateTooltip(name, rarity, age)
-	PetName.Text = name
-	PetRarity.Text = "◆ " .. rarity
-	PetAge.Text = "Age: " .. age
-	InfoBox.Visible = true
-	task.delay(5, function()
-		InfoBox.Visible = false
-	end)
+    tooltip.Text = "Name: " .. name .. "\nRarity: " .. rarity .. "\nAge: " .. age
 end
 
--- FAKE Inventory for demo
-local Inventory = {
-    ["1"] = { name = "Frostbite Bear", model = Instance.new("Part") },
-    ["2"] = { name = "Unicorn", model = Instance.new("Part") }
-}
+-- When a rarity button is clicked, update suffix
+for key, button in pairs(rarityButtons) do
+    button.MouseButton1Click:Connect(function()
+        currentSuffix = key
+        print("Selected suffix:", key)
+    end)
+end
 
--- Logic
-local function duplicatePet(petName)
-    for _, item in pairs(Inventory) do
-        if item.name == petName then
-            local pet = item.model:Clone()
-            pet.Size = Vector3.new(3, 3, 3)
-            pet.Anchored = true
-            pet.Position = game.Players.LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(5, 0, 0)
-            pet.Parent = workspace
+-- Spawning function
+local function spawnPet()
+    local baseName = petNameBox.Text
+    if baseName == "" then return end
 
-            updateTooltip(petName, "Test Model", "Newborn")
-            return
+    local fullName = baseName .. (currentSuffix ~= "" and " " .. currentSuffix or "")
+    local petModel = ReplicatedStorage:FindFirstChild("Pets"):FindFirstChild(baseName)
+
+    if petModel and petModel:IsA("Model") then
+        local clonedPet = petModel:Clone()
+        local rootPart = clonedPet.PrimaryPart or clonedPet:FindFirstChild("HumanoidRootPart") or clonedPet:FindFirstChildWhichIsA("BasePart")
+
+        if rootPart then
+            clonedPet:SetPrimaryPartCFrame(character.HumanoidRootPart.CFrame * CFrame.new(3, 0, 0))
+            clonedPet.Parent = workspace
+            updateTooltip(fullName, currentSuffix ~= "" and currentSuffix or "Normal", "Newborn")
+        else
+            warn("Pet model is missing a PrimaryPart!")
+            updateTooltip("Error", "No PrimaryPart", "-")
         end
+    else
+        updateTooltip(baseName, "Not Found", "-")
+        warn("Pet model not found in ReplicatedStorage.Pets")
     end
-    updateTooltip(petName, "Not Found", "-")
 end
 
-Spawn.MouseButton1Click:Connect(function()
-    local name = NameBox.Text
-    if name ~= "" then
-        duplicatePet(name)
-    end
-end)
-
--- Draggable
-local UIS = game:GetService("UserInputService")
-local dragging, dragStart, startPos
-
-Main.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = Main.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then dragging = false end
-        end)
-    end
-end)
-
-Main.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - dragStart
-        Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
+-- Spawn button clicked
+spawnBtn.MouseButton1Click:Connect(spawnPet)
