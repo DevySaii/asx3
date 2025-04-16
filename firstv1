@@ -1,33 +1,14 @@
--- Saii's Script - Unique Pet Spawner GUI
+-- Saii's Pet Spawner GUI
 
+-- GUI Setup
 local Spawner = Instance.new("ScreenGui")
 local Main = Instance.new("Frame")
 local Title = Instance.new("TextLabel")
 local UICorner = Instance.new("UICorner")
-
 local NameBox = Instance.new("TextBox")
-local NameBoxCorner = Instance.new("UICorner")
-
+local UICorner_Name = Instance.new("UICorner")
 local Spawn = Instance.new("TextButton")
-local SpawnCorner = Instance.new("UICorner")
-
-local petType = "NP"
-local typeButtons = {}
-
-local petTypes = {
-    {key = "NP", label = "No Pot"},
-    {key = "F", label = "F"},
-    {key = "R", label = "R"},
-    {key = "FR", label = "FR"},
-    {key = "N", label = "Neon"},
-    {key = "NR", label = "NR"},
-    {key = "NF", label = "NF"},
-    {key = "NFR", label = "NFR"},
-    {key = "M", label = "M"},
-    {key = "MR", label = "MR"},
-    {key = "MF", label = "MF"},
-    {key = "MFR", label = "MFR"},
-}
+local UICorner_Spawn = Instance.new("UICorner")
 
 Spawner.Name = "SaiiScript"
 Spawner.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
@@ -37,13 +18,12 @@ Main.Name = "Main"
 Main.Parent = Spawner
 Main.AnchorPoint = Vector2.new(0.5, 0.5)
 Main.Position = UDim2.new(0.5, 0, 0.5, 0)
-Main.Size = UDim2.new(0, 500, 0, 370)
+Main.Size = UDim2.new(0, 500, 0, 360)
 Main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 
 UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = Main
 
--- Title
 Title.Name = "Title"
 Title.Parent = Main
 Title.Size = UDim2.new(1, 0, 0, 40)
@@ -53,49 +33,9 @@ Title.Text = "Saii's Script - Pet Spawner"
 Title.TextColor3 = Color3.fromRGB(0, 255, 100)
 Title.TextScaled = true
 
--- Grid for buttons
-local grid = Instance.new("Frame")
-grid.Name = "ButtonGrid"
-grid.Parent = Main
-grid.Position = UDim2.new(0.05, 0, 0.13, 0)
-grid.Size = UDim2.new(0.9, 0, 0.52, 0)
-grid.BackgroundTransparency = 1
-
-local layout = Instance.new("UIGridLayout")
-layout.CellSize = UDim2.new(0, 100, 0, 30)
-layout.CellPadding = UDim2.new(0, 5, 0, 5)
-layout.FillDirectionMaxCells = 4
-layout.SortOrder = Enum.SortOrder.LayoutOrder
-layout.Parent = grid
-
-for _, p in ipairs(petTypes) do
-    local btn = Instance.new("TextButton")
-    btn.Name = p.key
-    btn.Text = p.label
-    btn.Font = Enum.Font.Gotham
-    btn.TextScaled = true
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    btn.Parent = grid
-
-    local corner = Instance.new("UICorner", btn)
-    corner.CornerRadius = UDim.new(0, 6)
-
-    btn.MouseButton1Click:Connect(function()
-        petType = p.key
-        for _, b in ipairs(typeButtons) do
-            b.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        end
-        btn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
-    end)
-
-    table.insert(typeButtons, btn)
-end
-
--- Name input
 NameBox.Name = "NameBox"
 NameBox.Parent = Main
-NameBox.Position = UDim2.new(0.5, 0, 0.7, 0)
+NameBox.Position = UDim2.new(0.5, 0, 0.3, 0)
 NameBox.AnchorPoint = Vector2.new(0.5, 0)
 NameBox.Size = UDim2.new(0.9, 0, 0.1, 0)
 NameBox.Font = Enum.Font.Gotham
@@ -105,61 +45,84 @@ NameBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 NameBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 NameBox.TextScaled = true
 
-NameBoxCorner.CornerRadius = UDim.new(0, 6)
-NameBoxCorner.Parent = NameBox
+UICorner_Name.CornerRadius = UDim.new(0, 6)
+UICorner_Name.Parent = NameBox
 
--- Spawn button
 Spawn.Name = "Spawn"
 Spawn.Parent = Main
-Spawn.Position = UDim2.new(0.5, 0, 0.84, 0)
+Spawn.Position = UDim2.new(0.5, 0, 0.5, 0)
 Spawn.AnchorPoint = Vector2.new(0.5, 0)
 Spawn.Size = UDim2.new(0.5, 0, 0.1, 0)
 Spawn.Font = Enum.Font.GothamBold
-Spawn.Text = "Spawn"
+Spawn.Text = "Spawn All Types"
 Spawn.TextColor3 = Color3.fromRGB(255, 255, 255)
 Spawn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
 Spawn.TextScaled = true
 
-SpawnCorner.CornerRadius = UDim.new(0, 6)
-SpawnCorner.Parent = Spawn
+UICorner_Spawn.CornerRadius = UDim.new(0, 6)
+UICorner_Spawn.Parent = Spawn
 
--- Pet generation
-local function generateProps()
-    return {
-        rideable = petType:find("R") and not petType:find("M") or false,
-        flyable = petType:find("F") and not petType:find("M") or false,
-        neon = petType:find("N") and not petType:find("M") or false,
-        mega_neon = petType:find("M") ~= nil,
-        age = 1
-    }
-end
+-- Pet Spawning Logic
+Spawn.MouseButton1Click:Connect(function()
+    local petName = NameBox.Text
+    if petName == "" then return end
 
-local function spawnUniquePet(name)
-    local Fsys = require(game.ReplicatedStorage.Fsys)
-    local ClientData = Fsys.load("ClientData")
+    local Loads = require(game.ReplicatedStorage.Fsys).load
+    local ClientData = Loads("ClientData")
+    local InventoryDB = Loads("InventoryDB")
     local Inventory = ClientData.get("inventory")
 
-    local uuid = game.HttpService:GenerateGUID(false)
+    local function cloneTable(original)
+        local copy = {}
+        for k, v in pairs(original) do
+            copy[k] = typeof(v) == "table" and cloneTable(v) or v
+        end
+        return copy
+    end
 
-    Inventory.pets = Inventory.pets or {}
-    Inventory.pets[uuid] = {
-        name = name,
-        properties = generateProps(),
-        count = 1
+    local function createPet(name, props)
+        for _, category in pairs(InventoryDB) do
+            for _, item in pairs(category) do
+                if item.name == name then
+                    local uuid = game.HttpService:GenerateGUID(false)
+                    local n_item = cloneTable(item)
+                    n_item.unique = "uuid_" .. uuid
+                    n_item.category = "pets"
+                    n_item.properties = props
+                    n_item.newness_order = math.random(1, 900000)
+
+                    Inventory["pets"] = Inventory["pets"] or {}
+                    Inventory["pets"][uuid] = n_item
+                    return
+                end
+            end
+        end
+    end
+
+    local petVariants = {
+        {label = "NP",  props = {rideable=false, flyable=false, neon=false, mega_neon=false}},
+        {label = "F",   props = {rideable=false, flyable=true,  neon=false, mega_neon=false}},
+        {label = "R",   props = {rideable=true,  flyable=false, neon=false, mega_neon=false}},
+        {label = "FR",  props = {rideable=true,  flyable=true,  neon=false, mega_neon=false}},
+        {label = "Neon",props = {rideable=false, flyable=false, neon=true,  mega_neon=false}},
+        {label = "NR",  props = {rideable=true,  flyable=false, neon=true,  mega_neon=false}},
+        {label = "NF",  props = {rideable=false, flyable=true,  neon=true,  mega_neon=false}},
+        {label = "NFR", props = {rideable=true,  flyable=true,  neon=true,  mega_neon=false}},
+        {label = "M",   props = {rideable=false, flyable=false, neon=true,  mega_neon=true}},
+        {label = "MR",  props = {rideable=true,  flyable=false, neon=true,  mega_neon=true}},
+        {label = "MF",  props = {rideable=false, flyable=true,  neon=true,  mega_neon=true}},
+        {label = "MFR", props = {rideable=true,  flyable=true,  neon=true,  mega_neon=true}},
     }
-end
 
-Spawn.MouseButton1Click:Connect(function()
-    local name = NameBox.Text
-    if name and name ~= "" then
-        spawnUniquePet(name)
+    for _, variant in pairs(petVariants) do
+        variant.props.age = 1
+        createPet(petName, variant.props)
     end
 end)
 
--- Dragging GUI
+-- GUI Draggable Support
 local UIS = game:GetService("UserInputService")
-local dragging = false
-local dragStart, startPos
+local dragging, dragStart, startPos
 
 Main.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -177,6 +140,7 @@ end)
 Main.InputChanged:Connect(function(input)
     if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
         local delta = input.Position - dragStart
-        Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+                                  startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
