@@ -1,48 +1,132 @@
-local function registerAndEquipPet(petName)
-	local fsys = require(ReplicatedStorage.Fsys).load
-	local ClientData = fsys("ClientData")
-	local InventoryDB = fsys("InventoryDB")
-	local Inventory = ClientData.get("inventory")
-	local InventoryService = fsys("InventoryService")
+--== FULL PET SPAWNER GUI (1 FILE) ==--
 
-	for _, pets in pairs(InventoryDB) do
-		for _, item in pairs(pets) do
-			if item.name:lower() == petName:lower() then
-				local newItem = deepCopy(item)
-				local uuid = "uuid_" .. HttpService:GenerateGUID(false)
-				newItem.unique = uuid
-				newItem.category = "pets"
-				newItem.properties = getProperties()
-				newItem.equipped = true
-				newItem.newness_order = math.random(1, 999999)
-				Inventory.pets = Inventory.pets or {}
-				Inventory.pets[uuid] = newItem
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
-				-- Equip using InventoryService
-				if InventoryService and InventoryService.equipPet then
-					InventoryService.equipPet(uuid)
-				end
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
 
-				-- Fire event manually to sync the visual model
-				local equipSignal = ReplicatedStorage:FindFirstChild("OnPetEquipped")
-				if equipSignal then
-					equipSignal:FireClient(LocalPlayer, petName)
-				end
+-- Build GUI
+local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+screenGui.Name = "PetSpawner"
+screenGui.ResetOnSpawn = false
 
-				return true
-			end
+local frame = Instance.new("Frame", screenGui)
+frame.Position = UDim2.new(0.5, -150, 0.5, -120)
+frame.Size = UDim2.new(0, 300, 0, 240)
+frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+frame.BorderSizePixel = 0
+
+local uiCorner = Instance.new("UICorner", frame)
+uiCorner.CornerRadius = UDim.new(0, 12)
+
+local nameBox = Instance.new("TextBox", frame)
+nameBox.Name = "NameBox"
+nameBox.PlaceholderText = "Enter Pet Name"
+nameBox.Size = UDim2.new(1, -20, 0, 30)
+nameBox.Position = UDim2.new(0, 10, 0, 10)
+nameBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+nameBox.TextColor3 = Color3.new(1, 1, 1)
+nameBox.ClearTextOnFocus = false
+Instance.new("UICorner", nameBox).CornerRadius = UDim.new(0, 8)
+
+-- Type Buttons
+local petTypes = { "NP", "F", "R", "FR", "N", "NR", "NF", "NFR", "M", "MR", "MF", "MFR" }
+local selectedType = "NP"
+
+local typeContainer = Instance.new("Frame", frame)
+typeContainer.Position = UDim2.new(0, 10, 0, 50)
+typeContainer.Size = UDim2.new(1, -20, 0, 100)
+typeContainer.BackgroundTransparency = 1
+
+local grid = Instance.new("UIGridLayout", typeContainer)
+grid.CellSize = UDim2.new(0, 60, 0, 30)
+grid.CellPadding = UDim2.new(0, 5, 0, 5)
+
+local typeButtons = {}
+
+for _, typeName in ipairs(petTypes) do
+	local btn = Instance.new("TextButton", typeContainer)
+	btn.Name = typeName
+	btn.Text = typeName
+	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	btn.TextColor3 = Color3.new(1, 1, 1)
+	btn.AutoButtonColor = true
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+	typeButtons[typeName] = btn
+
+	btn.MouseButton1Click:Connect(function()
+		selectedType = typeName
+		for _, b in pairs(typeButtons) do
+			b.TextColor3 = Color3.new(1, 1, 1)
 		end
-	end
-	return false
+		btn.TextColor3 = Color3.fromRGB(0, 255, 0)
+	end)
 end
 
--- 🟢 Spawn Button: now spawns + equips + visuals
-spawnBtn.MouseButton1Click:Connect(function()
-	local name = nameBox.Text
-	if name and name ~= "" then
-		local success = registerAndEquipPet(name)
-		if not success then
-			warn("❌ Pet not found in InventoryDB!")
+-- Spawn Button
+local spawnBtn = Instance.new("TextButton", frame)
+spawnBtn.Name = "Spawn"
+spawnBtn.Text = "🧬 Spawn Pet"
+spawnBtn.Size = UDim2.new(1, -20, 0, 35)
+spawnBtn.Position = UDim2.new(0, 10, 1, -45)
+spawnBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 100)
+spawnBtn.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", spawnBtn).CornerRadius = UDim.new(0, 10)
+
+-- 🧠 Pet Spawning Logic
+local equippedPet = nil
+
+local function followPlayer(pet)
+	local root = character:WaitForChild("HumanoidRootPart")
+	local petHRP = pet:WaitForChild("HumanoidRootPart")
+	local offset = Vector3.new(3, 0, 3)
+
+	RunService:BindToRenderStep("FollowPet", Enum.RenderPriority.Character.Value + 1, function()
+		if pet and petHRP and root and pet.Parent then
+			local target = root.Position + offset
+			local direction = (target - petHRP.Position).Unit
+			petHRP.Velocity = direction * 10
 		end
+	end)
+end
+
+local function toggleEquip(pet)
+	if equippedPet == pet then
+		equippedPet:Destroy()
+		equippedPet = nil
+		RunService:UnbindFromRenderStep("FollowPet")
+	else
+		if equippedPet then
+			equippedPet:Destroy()
+		end
+		equippedPet = pet
+		followPlayer(pet)
 	end
+end
+
+spawnBtn.MouseButton1Click:Connect(function()
+	local petName = nameBox.Text
+	if petName == "" then warn("Enter a pet name") return end
+
+	local petFolder = ReplicatedStorage:FindFirstChild("Pets")
+	if not petFolder then warn("Pets folder missing in ReplicatedStorage") return end
+
+	local petModel = petFolder:FindFirstChild(petName)
+	if not petModel then warn("Pet not found: " .. petName) return end
+
+	local petClone = petModel:Clone()
+	petClone.Name = petName .. " [" .. selectedType .. "]"
+
+	local root = character:FindFirstChild("HumanoidRootPart")
+	if not root then warn("No HumanoidRootPart") return end
+
+	petClone:SetPrimaryPartCFrame(root.CFrame * CFrame.new(3, 0, 3))
+	petClone.Parent = workspace
+
+	local clickDetector = Instance.new("ClickDetector", petClone.PrimaryPart)
+	clickDetector.MouseClick:Connect(function()
+		toggleEquip(petClone)
+	end)
 end)
