@@ -1,4 +1,4 @@
---⚡ Saii's Pet Spawner GUI (Rewritten by ChatGPT)
+--⚡ Saii's Pet Spawner GUI (Final Version)
 
 -- Services
 local Players = game:GetService("Players")
@@ -10,7 +10,7 @@ local HttpService = game:GetService("HttpService")
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
--- State
+-- GUI State
 local petType = "NP"
 local currentPet = nil
 local petEquipped = false
@@ -82,9 +82,7 @@ for i, t in ipairs(types) do
 	btn.TextScaled = true
 	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
 
-	local corner = Instance.new("UICorner", btn)
-	corner.CornerRadius = UDim.new(0, 8)
-
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
 	local stroke = Instance.new("UIStroke", btn)
 	stroke.Color = Color3.fromRGB(40, 40, 40)
 	stroke.Thickness = 1
@@ -103,7 +101,7 @@ for i, t in ipairs(types) do
 	table.insert(buttons, btn)
 end
 
--- Input
+-- Name Box
 local nameBox = Instance.new("TextBox", main)
 nameBox.Size = UDim2.new(0, 400, 0, 40)
 nameBox.Position = UDim2.new(0.5, -200, 1, -90)
@@ -116,7 +114,7 @@ nameBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Instance.new("UICorner", nameBox).CornerRadius = UDim.new(0, 8)
 Instance.new("UIStroke", nameBox).Color = Color3.fromRGB(50, 255, 100)
 
--- Follow function
+-- Pet follow logic
 local function followPet(pet)
 	RunService:BindToRenderStep("PetFollow", Enum.RenderPriority.Character.Value + 1, function()
 		if pet and pet:FindFirstChild("PrimaryPart") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -126,34 +124,19 @@ local function followPet(pet)
 	end)
 end
 
--- Clone
-local function deepCopy(tbl)
-	local copy = {}
-	for k, v in pairs(tbl) do
-		copy[k] = typeof(v) == "table" and deepCopy(v) or v
-	end
-	return copy
-end
-
--- Props
-local function getProperties()
-	return {
-		flyable = petType:find("F") ~= nil,
-		rideable = petType:find("R") ~= nil,
-		neon = petType:find("N") ~= nil,
-		mega_neon = petType:find("M") ~= nil,
-		age = 1,
-	}
-end
-
--- Spawn pet
-local function spawnPet(petName)
+-- Destroy visual
+local function destroyCurrentPet()
 	if currentPet then
+		RunService:UnbindFromRenderStep("PetFollow")
 		currentPet:Destroy()
 		currentPet = nil
 		petEquipped = false
 	end
+end
 
+-- Visual spawn
+local function equipVisualPet(petName)
+	destroyCurrentPet()
 	local petModel = ReplicatedStorage:FindFirstChild("Pets") and ReplicatedStorage.Pets:FindFirstChild(petName)
 	if petModel then
 		local clone = petModel:Clone()
@@ -165,7 +148,25 @@ local function spawnPet(petName)
 	end
 end
 
--- Inventory registration
+-- Inventory integration
+local function getProperties()
+	return {
+		flyable = petType:find("F") ~= nil,
+		rideable = petType:find("R") ~= nil,
+		neon = petType:find("N") ~= nil,
+		mega_neon = petType:find("M") ~= nil,
+		age = 1,
+	}
+end
+
+local function deepCopy(tbl)
+	local copy = {}
+	for k, v in pairs(tbl) do
+		copy[k] = typeof(v) == "table" and deepCopy(v) or v
+	end
+	return copy
+end
+
 local function registerPet(petName)
 	local fsys = require(ReplicatedStorage.Fsys).load
 	local ClientData = fsys("ClientData")
@@ -210,9 +211,22 @@ Instance.new("UIStroke", spawnBtn).Color = Color3.fromRGB(0, 255, 100)
 spawnBtn.MouseButton1Click:Connect(function()
 	local name = nameBox.Text
 	if name and name ~= "" then
-		spawnPet(name)
-		if petEquipped then
-			registerPet(name)
-		end
+		registerPet(name)
 	end
 end)
+
+-- 🟢 Listen for global equip to sync visual
+local equipSignal = ReplicatedStorage:WaitForChild("OnPetEquipped")
+equipSignal.OnClientEvent:Connect(function(petName)
+	if petName and typeof(petName) == "string" then
+		equipVisualPet(petName)
+	end
+end)
+
+-- 🔴 Optional: Listen for global unequip
+local unequipSignal = ReplicatedStorage:FindFirstChild("OnPetUnequipped")
+if unequipSignal then
+	unequipSignal.OnClientEvent:Connect(function()
+		destroyCurrentPet()
+	end)
+end
