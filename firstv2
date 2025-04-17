@@ -1,4 +1,4 @@
--- Saii's Pet Spawner with One-Time Key Use & Enhanced UI
+-- LynxIT Visual Script v2 - Pet Spawner with One-Time Token Use
 
 local allowedKeys = {
 	["KEY-daRfjQOyuIsPupQNMXiiGPQKucsDthlw"] = true,
@@ -15,19 +15,17 @@ local allowedKeys = {
 	["KEY-UZPdgoXDYwupnyDEEbdmZYEsqfivEJOo"] = true,
 }
 
-local usedKeys = {} -- Track used keys (local/session-based)
-
+local usedKeys = {}
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- GUI Setup
 local Spawner = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
 Spawner.Name = "Spawner"
 Spawner.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 Spawner.ResetOnSpawn = false
 
--- Key UI
+-- Token UI
 local KeyFrame = Instance.new("Frame", Spawner)
 KeyFrame.Size = UDim2.new(0, 0, 0, 0)
 KeyFrame.Position = UDim2.new(0.5, -200, 0.5, -100)
@@ -37,10 +35,10 @@ TweenService:Create(KeyFrame, TweenInfo.new(0.4), {
 	Size = UDim2.new(0, 400, 0, 200)
 }):Play()
 
-local KeyBox = Instance.new("Token Required", KeyFrame)
+local KeyBox = Instance.new("TextBox", KeyFrame)
 KeyBox.Size = UDim2.new(0, 300, 0, 40)
 KeyBox.Position = UDim2.new(0.5, -150, 0, 50)
-KeyBox.PlaceholderText = "Enter Access Key..."
+KeyBox.PlaceholderText = "Token Required..."
 KeyBox.Text = ""
 KeyBox.Font = Enum.Font.Gotham
 KeyBox.TextScaled = true
@@ -53,7 +51,7 @@ keyStroke.Color = Color3.fromRGB(0, 255, 100)
 local Confirm = Instance.new("TextButton", KeyFrame)
 Confirm.Size = UDim2.new(0, 180, 0, 35)
 Confirm.Position = UDim2.new(0.5, -90, 1, -60)
-Confirm.Text = "SUBMIT"
+Confirm.Text = "Unlock"
 Confirm.Font = Enum.Font.GothamBold
 Confirm.TextScaled = true
 Confirm.TextColor3 = Color3.new(1, 1, 1)
@@ -62,17 +60,15 @@ Instance.new("UICorner", Confirm).CornerRadius = UDim.new(0, 10)
 local unlockStroke = Instance.new("UIStroke", Confirm)
 unlockStroke.Color = Color3.fromRGB(0, 255, 100)
 
--- Main UI
+-- Main GUI
 local Main = Instance.new("Frame", Spawner)
 Main.Size = UDim2.new(0, 0, 0, 0)
 Main.Position = UDim2.new(0.5, 0, 0.5, 0)
 Main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 Main.Visible = false
 Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
-local mainStroke = Instance.new("UIStroke", Main)
-mainStroke.Color = Color3.fromRGB(40, 255, 60)
+Instance.new("UIStroke", Main).Color = Color3.fromRGB(40, 255, 60)
 
--- Main UI reveal
 local function showMainUI()
 	Main.Visible = true
 	TweenService:Create(Main, TweenInfo.new(0.4), {
@@ -81,7 +77,7 @@ local function showMainUI()
 	}):Play()
 end
 
--- Dragging
+-- Dragging logic
 local dragging, dragStart, startPos
 Main.InputBegan:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -102,16 +98,25 @@ game:GetService("UserInputService").InputChanged:Connect(function(input)
 	end
 end)
 
--- Title
+-- Title and Author
 local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, 0, 0, 40)
-Title.Text = "✦ Saii's Pet Spawner"
+Title.Text = "LynxIT | Visual Script v2"
 Title.Font = Enum.Font.GothamBlack
 Title.TextScaled = true
 Title.TextColor3 = Color3.fromRGB(0, 255, 100)
 Title.BackgroundTransparency = 1
 
--- Pet Type Buttons
+local Author = Instance.new("TextLabel", Main)
+Author.Size = UDim2.new(1, 0, 0, 20)
+Author.Position = UDim2.new(0, 0, 0, 40)
+Author.Text = "@bannedpaul._"
+Author.Font = Enum.Font.Gotham
+Author.TextScaled = true
+Author.TextColor3 = Color3.fromRGB(100, 255, 150)
+Author.BackgroundTransparency = 1
+
+-- Pet Buttons
 local petType = "NP"
 local buttonTypes = {"NP", "F", "R", "FR", "N", "NR", "NF", "NFR", "M", "MR", "MF", "MFR"}
 local buttons = {}
@@ -126,13 +131,12 @@ end
 for i, type in ipairs(buttonTypes) do
 	local btn = Instance.new("TextButton", Main)
 	btn.Size = UDim2.new(0, 90, 0, 35)
-	btn.Position = UDim2.new(0, 15 + ((i - 1) % 4) * 115, 0, 50 + math.floor((i - 1) / 4) * 40)
+	btn.Position = UDim2.new(0, 15 + ((i - 1) % 4) * 115, 0, 70 + math.floor((i - 1) / 4) * 40)
 	btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 	btn.Text = (type == "NP") and "NP (None)" or type
 	btn.Font = Enum.Font.GothamBold
 	btn.TextScaled = true
 	btn.TextColor3 = Color3.new(1, 1, 1)
-
 	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
 	local stroke = Instance.new("UIStroke", btn)
 	stroke.Color = Color3.fromRGB(40, 40, 40)
@@ -147,8 +151,8 @@ for i, type in ipairs(buttonTypes) do
 	table.insert(buttons, btn)
 end
 
--- Pet Name
-local NameBox = Instance.new("Visual Pet", Main)
+-- Pet Name Input
+local NameBox = Instance.new("TextBox", Main)
 NameBox.Size = UDim2.new(0, 400, 0, 40)
 NameBox.Position = UDim2.new(0.5, -200, 1, -90)
 NameBox.PlaceholderText = "Enter Pet Name..."
@@ -158,23 +162,21 @@ NameBox.TextScaled = true
 NameBox.TextColor3 = Color3.new(1, 1, 1)
 NameBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Instance.new("UICorner", NameBox).CornerRadius = UDim.new(0, 8)
-local nameStroke = Instance.new("UIStroke", NameBox)
-nameStroke.Color = Color3.fromRGB(50, 255, 100)
+Instance.new("UIStroke", NameBox).Color = Color3.fromRGB(50, 255, 100)
 
--- Spawn Pet
+-- Spawn Button
 local Spawn = Instance.new("TextButton", Main)
 Spawn.Size = UDim2.new(0, 180, 0, 40)
 Spawn.Position = UDim2.new(0.5, -90, 1, -40)
-Spawn.Text = "Duplicate Pet"
+Spawn.Text = "Spawn Pet"
 Spawn.Font = Enum.Font.GothamBlack
 Spawn.TextScaled = true
 Spawn.TextColor3 = Color3.fromRGB(255, 255, 255)
 Spawn.BackgroundColor3 = Color3.fromRGB(20, 80, 20)
 Instance.new("UICorner", Spawn).CornerRadius = UDim.new(0, 10)
-local spawnStroke = Instance.new("UIStroke", Spawn)
-spawnStroke.Color = Color3.fromRGB(0, 255, 100)
+Instance.new("UIStroke", Spawn).Color = Color3.fromRGB(0, 255, 100)
 
--- Spawn Logic
+-- Spawning Logic
 local function generate_props()
 	return {
 		flyable = petType:find("F") ~= nil,
@@ -222,7 +224,6 @@ Spawn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Key Unlock Logic
 Confirm.MouseButton1Click:Connect(function()
 	local enteredKey = KeyBox.Text
 	if allowedKeys[enteredKey] and not usedKeys[enteredKey] then
@@ -231,17 +232,17 @@ Confirm.MouseButton1Click:Connect(function()
 		showMainUI()
 	elseif usedKeys[enteredKey] then
 		KeyBox.Text = ""
-		KeyBox.PlaceholderText = "✘ Key Already Used"
+		KeyBox.PlaceholderText = "Key Already Used"
 		keyStroke.Color = Color3.fromRGB(255, 120, 0)
 		task.wait(1)
 		keyStroke.Color = Color3.fromRGB(0, 255, 100)
-		KeyBox.PlaceholderText = "Enter Access Key..."
+		KeyBox.PlaceholderText = "Token Required..."
 	else
 		KeyBox.Text = ""
-		KeyBox.PlaceholderText = "✘ Invalid Key"
+		KeyBox.PlaceholderText = "Invalid Key"
 		keyStroke.Color = Color3.fromRGB(255, 0, 0)
 		task.wait(1)
 		keyStroke.Color = Color3.fromRGB(0, 255, 100)
-		KeyBox.PlaceholderText = "Enter Access Key..."
+		KeyBox.PlaceholderText = "Token Required..."
 	end
 end)
