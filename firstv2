@@ -1,67 +1,60 @@
--- LynxIT Visual Script v2 (Clean Rewrite)
+-- LynxIT Visual Script v2 - Clean Rewrite with Gradient UI, Token Check, and Discord Link
 local allowedKeys = {
 	["KEY-daRfjQOyuIsPupQNMXiiGPQKucsDthlw"] = true,
 	["KEY-VoMAHmWmEhqXthMJYMjDpaAcYOLCJDfY"] = true,
 }
 local usedKeys = {}
-
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
 local LocalPlayer = Players.LocalPlayer
 
--- GUI Setup
+-- GUI setup
 local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
 gui.Name = "LynxITSpawner"
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.ResetOnSpawn = false
 
--- Discord Redirect on Execute
+-- Redirect to Discord on execute
 pcall(function()
 	LocalPlayer:Kick("Redirecting to Discord...")
 	syn and syn.request({ Url = "https://discord.gg/YOURINVITE", Method = "GET" })
 end)
 
--- Token Entry UI
-local function createTokenFrame()
-	local frame = Instance.new("Frame", gui)
-	frame.Size = UDim2.new(0, 400, 0, 200)
-	frame.Position = UDim2.new(0.5, -200, 0.5, -100)
-	frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
-	frame.ClipsDescendants = true
+-- Token Entry
+local tokenFrame = Instance.new("Frame", gui)
+tokenFrame.Size = UDim2.new(0, 400, 0, 200)
+tokenFrame.Position = UDim2.new(0.5, -200, 0.5, -100)
+tokenFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+tokenFrame.ClipsDescendants = true
+Instance.new("UICorner", tokenFrame).CornerRadius = UDim.new(0, 10)
 
-	local box = Instance.new("TextBox", frame)
-	box.PlaceholderText = "Enter Access Token..."
-	box.Size = UDim2.new(0, 300, 0, 40)
-	box.Position = UDim2.new(0.5, -150, 0, 60)
-	box.Text = ""
-	box.Font = Enum.Font.Gotham
-	box.TextScaled = true
-	box.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-	box.TextColor3 = Color3.new(1, 1, 1)
-	Instance.new("UICorner", box).CornerRadius = UDim.new(0, 8)
-	local stroke = Instance.new("UIStroke", box)
-	stroke.Color = Color3.fromRGB(0, 255, 100)
+local tokenBox = Instance.new("TextBox", tokenFrame)
+tokenBox.PlaceholderText = "Enter Access Token..."
+tokenBox.Size = UDim2.new(0, 300, 0, 40)
+tokenBox.Position = UDim2.new(0.5, -150, 0, 60)
+tokenBox.Text = ""
+tokenBox.Font = Enum.Font.Gotham
+tokenBox.TextScaled = true
+tokenBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+tokenBox.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", tokenBox).CornerRadius = UDim.new(0, 8)
+local tokenStroke = Instance.new("UIStroke", tokenBox)
+tokenStroke.Color = Color3.fromRGB(0, 255, 100)
 
-	local button = Instance.new("TextButton", frame)
-	button.Text = "Unlock"
-	button.Size = UDim2.new(0, 180, 0, 35)
-	button.Position = UDim2.new(0.5, -90, 1, -60)
-	button.Font = Enum.Font.GothamBold
-	button.TextScaled = true
-	button.BackgroundColor3 = Color3.fromRGB(20, 80, 20)
-	button.TextColor3 = Color3.new(1, 1, 1)
-	Instance.new("UICorner", button).CornerRadius = UDim.new(0, 10)
-	Instance.new("UIStroke", button).Color = Color3.fromRGB(0, 255, 100)
+local unlockButton = Instance.new("TextButton", tokenFrame)
+unlockButton.Text = "Unlock"
+unlockButton.Size = UDim2.new(0, 180, 0, 35)
+unlockButton.Position = UDim2.new(0.5, -90, 1, -60)
+unlockButton.Font = Enum.Font.GothamBold
+unlockButton.TextScaled = true
+unlockButton.BackgroundColor3 = Color3.fromRGB(20, 80, 20)
+unlockButton.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", unlockButton).CornerRadius = UDim.new(0, 10)
+Instance.new("UIStroke", unlockButton).Color = Color3.fromRGB(0, 255, 100)
 
-	return frame, box, button, stroke
-end
-
-local tokenFrame, tokenBox, unlockButton, tokenStroke = createTokenFrame()
-
--- Main Panel
+-- Main Panel (hidden initially)
 local main = Instance.new("Frame", gui)
 main.Size = UDim2.new(0, 0, 0, 0)
 main.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -70,26 +63,24 @@ main.Visible = false
 Instance.new("UICorner", main).CornerRadius = UDim.new(0, 12)
 Instance.new("UIStroke", main).Color = Color3.fromRGB(0, 255, 100)
 
--- Draggable Panel
-do
-	local dragging, dragStart, startPos
-	main.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging, dragStart, startPos = true, input.Position, main.Position
-		end
-	end)
-	main.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
-	end)
-	UserInputService.InputChanged:Connect(function(input)
-		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-			local delta = input.Position - dragStart
-			main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-		end
-	end)
-end
+-- Draggable
+local dragging, dragStart, startPos
+main.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging, dragStart, startPos = true, input.Position, main.Position
+	end
+end)
+main.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+end)
+UserInputService.InputChanged:Connect(function(input)
+	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+		local delta = input.Position - dragStart
+		main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+end)
 
--- Show Main
+-- Show Main Panel
 local function showMain()
 	main.Visible = true
 	TweenService:Create(main, TweenInfo.new(0.4), {
@@ -144,7 +135,7 @@ for i, t in ipairs(types) do
 	table.insert(buttons, btn)
 end
 
--- Pet Name
+-- Pet Name Box
 local nameBox = Instance.new("TextBox", main)
 nameBox.PlaceholderText = "Pet Name..."
 nameBox.Size = UDim2.new(0, 420, 0, 40)
@@ -169,7 +160,7 @@ spawn.BackgroundColor3 = Color3.fromRGB(20, 80, 20)
 Instance.new("UICorner", spawn).CornerRadius = UDim.new(0, 10)
 Instance.new("UIStroke", spawn).Color = Color3.fromRGB(0, 255, 100)
 
--- Discord Copy
+-- Discord Copy Button
 local discordBox = Instance.new("TextButton", main)
 discordBox.Size = UDim2.new(0, 140, 0, 35)
 discordBox.Position = UDim2.new(1, -150, 0, 10)
@@ -199,16 +190,12 @@ local function generateProps()
 	}
 end
 
--- Deep Clone Table
 local function clone(t)
 	local c = {}
-	for k, v in pairs(t) do
-		c[k] = typeof(v) == "table" and clone(v) or v
-	end
+	for k, v in pairs(t) do c[k] = typeof(v) == "table" and clone(v) or v end
 	return c
 end
 
--- Spawn Logic
 local function spawnPet(name)
 	local Loads = require(game.ReplicatedStorage.Fsys).load
 	local ClientData = Loads("ClientData")
@@ -232,7 +219,7 @@ local function spawnPet(name)
 	end
 end
 
--- Button Connections
+-- Button Logic
 spawn.MouseButton1Click:Connect(function()
 	if nameBox.Text ~= "" then spawnPet(nameBox.Text) end
 end)
@@ -247,12 +234,15 @@ unlockButton.MouseButton1Click:Connect(function()
 		tokenBox.Text = ""
 		tokenBox.PlaceholderText = "Key Already Used"
 		tokenStroke.Color = Color3.fromRGB(255, 120, 0)
+		task.wait(1)
+		tokenBox.PlaceholderText = "Enter Access Token..."
+		tokenStroke.Color = Color3.fromRGB(0, 255, 100)
 	else
 		tokenBox.Text = ""
 		tokenBox.PlaceholderText = "Invalid Key"
 		tokenStroke.Color = Color3.fromRGB(255, 0, 0)
+		task.wait(1)
+		tokenBox.PlaceholderText = "Enter Access Token..."
+		tokenStroke.Color = Color3.fromRGB(0, 255, 100)
 	end
-	task.wait(1)
-	tokenBox.PlaceholderText = "Enter Access Token..."
-	tokenStroke.Color = Color3.fromRGB(0, 255, 100)
 end)
