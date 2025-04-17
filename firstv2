@@ -1,177 +1,9 @@
---⚡ Saii's Pet Spawner GUI (Final Version)
-
--- Services
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local HttpService = game:GetService("HttpService")
-
-local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
-
--- GUI State
-local petType = "NP"
-local currentPet = nil
-local petEquipped = false
-
--- GUI
-local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
-gui.Name = "PetSpawner"
-gui.ResetOnSpawn = false
-
-local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0, 500, 0, 340)
-main.Position = UDim2.new(0.5, -250, 0.5, -170)
-main.AnchorPoint = Vector2.new(0.5, 0.5)
-main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-main.BackgroundTransparency = 0.1
-main.BorderSizePixel = 0
-Instance.new("UICorner", main).CornerRadius = UDim.new(0, 12)
-Instance.new("UIStroke", main).Color = Color3.fromRGB(40, 255, 60)
-
--- Dragging
-local dragging, dragStart, startPos
-main.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = true
-		dragStart = input.Position
-		startPos = main.Position
-	end
-end)
-main.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = false
-	end
-end)
-UserInputService.InputChanged:Connect(function(input)
-	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-		local delta = input.Position - dragStart
-		main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-	end
-end)
-
--- Title
-local title = Instance.new("TextLabel", main)
-title.Size = UDim2.new(1, 0, 0, 40)
-title.Text = "⚡ Saii's Pet Spawner"
-title.Font = Enum.Font.GothamBlack
-title.TextColor3 = Color3.fromRGB(0, 255, 100)
-title.TextSize = 24
-title.BackgroundTransparency = 1
-
--- Buttons
-local types = {"NP", "F", "R", "FR", "N", "NR", "NF", "NFR", "M", "MR", "MF", "MFR"}
-local buttons = {}
-
-local function updateButtonSelection(selected)
-	for _, btn in ipairs(buttons) do
-		local isSelected = btn.Text == selected
-		btn.TextColor3 = isSelected and Color3.fromRGB(25, 255, 21) or Color3.fromRGB(255, 255, 255)
-		btn.UIStroke.Color = isSelected and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(40, 40, 40)
-	end
-end
-
-for i, t in ipairs(types) do
-	local btn = Instance.new("TextButton", main)
-	btn.Size = UDim2.new(0, 90, 0, 35)
-	btn.Position = UDim2.new(0, 15 + ((i - 1) % 4) * 115, 0, 50 + math.floor((i - 1) / 4) * 40)
-	btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-	btn.Text = t
-	btn.Font = Enum.Font.GothamBold
-	btn.TextScaled = true
-	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-
-	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-	local stroke = Instance.new("UIStroke", btn)
-	stroke.Color = Color3.fromRGB(40, 40, 40)
-	stroke.Thickness = 1
-
-	btn.MouseEnter:Connect(function()
-		if petType ~= t then btn.TextColor3 = Color3.fromRGB(80, 255, 80) end
-	end)
-	btn.MouseLeave:Connect(function()
-		if petType ~= t then btn.TextColor3 = Color3.fromRGB(255, 255, 255) end
-	end)
-	btn.MouseButton1Click:Connect(function()
-		petType = t
-		updateButtonSelection(t)
-	end)
-
-	table.insert(buttons, btn)
-end
-
--- Name Box
-local nameBox = Instance.new("TextBox", main)
-nameBox.Size = UDim2.new(0, 400, 0, 40)
-nameBox.Position = UDim2.new(0.5, -200, 1, -90)
-nameBox.PlaceholderText = "Enter Pet Name..."
-nameBox.Text = ""
-nameBox.Font = Enum.Font.Gotham
-nameBox.TextScaled = true
-nameBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-nameBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-Instance.new("UICorner", nameBox).CornerRadius = UDim.new(0, 8)
-Instance.new("UIStroke", nameBox).Color = Color3.fromRGB(50, 255, 100)
-
--- Pet follow logic
-local function followPet(pet)
-	RunService:BindToRenderStep("PetFollow", Enum.RenderPriority.Character.Value + 1, function()
-		if pet and pet:FindFirstChild("PrimaryPart") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-			local target = LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(-3, 0, 3)
-			pet:SetPrimaryPartCFrame(CFrame.new(pet.PrimaryPart.Position:Lerp(target, 0.1)))
-		end
-	end)
-end
-
--- Destroy visual
-local function destroyCurrentPet()
-	if currentPet then
-		RunService:UnbindFromRenderStep("PetFollow")
-		currentPet:Destroy()
-		currentPet = nil
-		petEquipped = false
-	end
-end
-
--- Visual spawn
-local function equipVisualPet(petName)
-	destroyCurrentPet()
-	local petModel = ReplicatedStorage:FindFirstChild("Pets") and ReplicatedStorage.Pets:FindFirstChild(petName)
-	if petModel then
-		local clone = petModel:Clone()
-		clone:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(3, 0, 3))
-		clone.Parent = workspace
-		currentPet = clone
-		petEquipped = true
-		followPet(clone)
-	end
-end
-
--- Inventory integration
-local function getProperties()
-	return {
-		flyable = petType:find("F") ~= nil,
-		rideable = petType:find("R") ~= nil,
-		neon = petType:find("N") ~= nil,
-		mega_neon = petType:find("M") ~= nil,
-		age = 1,
-	}
-end
-
-local function deepCopy(tbl)
-	local copy = {}
-	for k, v in pairs(tbl) do
-		copy[k] = typeof(v) == "table" and deepCopy(v) or v
-	end
-	return copy
-end
-
-local function registerPet(petName)
+local function registerAndEquipPet(petName)
 	local fsys = require(ReplicatedStorage.Fsys).load
 	local ClientData = fsys("ClientData")
 	local InventoryDB = fsys("InventoryDB")
 	local Inventory = ClientData.get("inventory")
+	local InventoryService = fsys("InventoryService")
 
 	for _, pets in pairs(InventoryDB) do
 		for _, item in pairs(pets) do
@@ -186,47 +18,31 @@ local function registerPet(petName)
 				Inventory.pets = Inventory.pets or {}
 				Inventory.pets[uuid] = newItem
 
-				local inv = fsys("InventoryService")
-				if inv and inv.equipPet then
-					inv.equipPet(uuid)
+				-- Equip using InventoryService
+				if InventoryService and InventoryService.equipPet then
+					InventoryService.equipPet(uuid)
 				end
-				return
+
+				-- Fire event manually to sync the visual model
+				local equipSignal = ReplicatedStorage:FindFirstChild("OnPetEquipped")
+				if equipSignal then
+					equipSignal:FireClient(LocalPlayer, petName)
+				end
+
+				return true
 			end
 		end
 	end
+	return false
 end
 
--- Spawn Button
-local spawnBtn = Instance.new("TextButton", main)
-spawnBtn.Size = UDim2.new(0, 180, 0, 40)
-spawnBtn.Position = UDim2.new(0.5, -90, 1, -40)
-spawnBtn.Text = "🎯 Spawn Pet"
-spawnBtn.Font = Enum.Font.GothamBlack
-spawnBtn.TextScaled = true
-spawnBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-spawnBtn.BackgroundColor3 = Color3.fromRGB(20, 80, 20)
-Instance.new("UICorner", spawnBtn).CornerRadius = UDim.new(0, 10)
-Instance.new("UIStroke", spawnBtn).Color = Color3.fromRGB(0, 255, 100)
-
+-- 🟢 Spawn Button: now spawns + equips + visuals
 spawnBtn.MouseButton1Click:Connect(function()
 	local name = nameBox.Text
 	if name and name ~= "" then
-		registerPet(name)
+		local success = registerAndEquipPet(name)
+		if not success then
+			warn("❌ Pet not found in InventoryDB!")
+		end
 	end
 end)
-
--- 🟢 Listen for global equip to sync visual
-local equipSignal = ReplicatedStorage:WaitForChild("OnPetEquipped")
-equipSignal.OnClientEvent:Connect(function(petName)
-	if petName and typeof(petName) == "string" then
-		equipVisualPet(petName)
-	end
-end)
-
--- 🔴 Optional: Listen for global unequip
-local unequipSignal = ReplicatedStorage:FindFirstChild("OnPetUnequipped")
-if unequipSignal then
-	unequipSignal.OnClientEvent:Connect(function()
-		destroyCurrentPet()
-	end)
-end
