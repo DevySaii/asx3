@@ -1,153 +1,211 @@
---// LynxIT | Visual Script v2 (Original Style Restored)
+-- LynxIT Visual Script v2 – Pet Spawner with One-Time Token and Gradient UI
 
+local allowedKeys = {
+	["KEY-daRfjQOyuIsPupQNMXiiGPQKucsDthlw"] = true,
+	["KEY-VoMAHmWmEhqXthMJYMjDpaAcYOLCJDfY"] = true,
+	["KEY-AOvBASTjaLteGsmHsBJIPDaTGlVUaOrK"] = true,
+	["KEY-nFlFOLWjRCrsKGiPgshTEeqJRQxlSBLF"] = true,
+	["KEY-meUcMhdHMtgTTZkbxgWIvjhibGttSFeG"] = true,
+	["KEY-BjbnQAuFxxUSiivcampcRusdtVXgGtsW"] = true,
+	["KEY-BoYiXDxrWstpWSkrMuBSHDGOTidmicRn"] = true,
+	["KEY-gkhmNKYJIqGHQGhXNNLOIEhvqQmVBCqH"] = true,
+	["KEY-tIcMMsjIKtcoWscTkclUYHfcaruFfUup"] = true,
+	["KEY-ZnsippWoYQGenHWWtfXSxqdgtoPiOFNN"] = true,
+	["KEY-hDtCDDwPIMQgZQgbWTTcJOMemXVekwIh"] = true,
+	["KEY-UZPdgoXDYwupnyDEEbdmZYEsqfivEJOo"] = true,
+}
+
+local usedKeys = {}
+local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
-local UIS = game:GetService("UserInputService")
-local LP = Players.LocalPlayer
+local LocalPlayer = Players.LocalPlayer
 
+-- GUI setup
+local Spawner = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+Spawner.Name = "Spawner"
+Spawner.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+Spawner.ResetOnSpawn = false
+
+-- Token Entry Frame
+local KeyFrame = Instance.new("Frame", Spawner)
+KeyFrame.Size = UDim2.new(0, 0, 0, 0)
+KeyFrame.Position = UDim2.new(0.5, -200, 0.5, -100)
+KeyFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 12)
+TweenService:Create(KeyFrame, TweenInfo.new(0.4), {
+	Size = UDim2.new(0, 400, 0, 200)
+}):Play()
+
+local KeyBox = Instance.new("TextBox", KeyFrame)
+KeyBox.Size = UDim2.new(0, 300, 0, 40)
+KeyBox.Position = UDim2.new(0.5, -150, 0, 50)
+KeyBox.PlaceholderText = "KEY-*******"
+KeyBox.Text = ""
+KeyBox.Font = Enum.Font.Gotham
+KeyBox.TextScaled = true
+KeyBox.TextColor3 = Color3.new(1, 1, 1)
+KeyBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 8)
+local keyStroke = Instance.new("UIStroke", KeyBox)
+keyStroke.Color = Color3.fromRGB(0, 255, 100)
+
+local Confirm = Instance.new("TextButton", KeyFrame)
+Confirm.Size = UDim2.new(0, 180, 0, 35)
+Confirm.Position = UDim2.new(0.5, -90, 1, -60)
+Confirm.Text = "Unlock"
+Confirm.Font = Enum.Font.GothamBold
+Confirm.TextScaled = true
+Confirm.TextColor3 = Color3.new(1, 1, 1)
+Confirm.BackgroundColor3 = Color3.fromRGB(20, 80, 20)
+Instance.new("UICorner", Confirm).CornerRadius = UDim.new(0, 10)
+local unlockStroke = Instance.new("UIStroke", Confirm)
+unlockStroke.Color = Color3.fromRGB(0, 255, 100)
+
+-- Main Panel
+local Main = Instance.new("Frame", Spawner)
+Main.Size = UDim2.new(0, 0, 0, 0)
+Main.Position = UDim2.new(0.5, 0, 0.5, 0)
+Main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Main.Visible = false
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
+Instance.new("UIStroke", Main).Color = Color3.fromRGB(40, 255, 60)
+
+local function showMainUI()
+	Main.Visible = true
+	TweenService:Create(Main, TweenInfo.new(0.4), {
+		Size = UDim2.new(0, 500, 0, 340),
+		Position = UDim2.new(0.5, -250, 0.5, -170)
+	}):Play()
+end
+
+-- Drag Main GUI
+local dragging, dragStart, startPos
+Main.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = Main.Position
+	end
+end)
+Main.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+end)
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+		local delta = input.Position - dragStart
+		Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+end)
+
+-- UI Labels
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.Text = "LynxIT | Visual Script v2"
+Title.Font = Enum.Font.GothamBlack
+Title.TextScaled = true
+Title.TextColor3 = Color3.fromRGB(0, 255, 100)
+Title.BackgroundTransparency = 1
+
+local Author = Instance.new("TextLabel", Main)
+Author.Size = UDim2.new(1, 0, 0, 20)
+Author.Position = UDim2.new(0, 0, 0, 40)
+Author.Text = "@bannedpaul._"
+Author.Font = Enum.Font.Gotham
+Author.TextScaled = true
+Author.TextColor3 = Color3.fromRGB(100, 255, 150)
+Author.BackgroundTransparency = 1
+
+-- Pet Type Buttons with Gradient
 local petType = "NP"
 local buttonTypes = {"NP", "F", "R", "FR", "N", "NR", "NF", "NFR", "M", "MR", "MF", "MFR"}
 local buttons = {}
 
-local GUI = Instance.new("ScreenGui", LP:WaitForChild("PlayerGui"))
-GUI.Name = "LynxITVisual"
-GUI.ResetOnSpawn = false
-
-local Frame = Instance.new("Frame", GUI)
-Frame.Size = UDim2.new(0, 480, 0, 310)
-Frame.Position = UDim2.new(0.5, -240, 0.5, -155)
-Frame.AnchorPoint = Vector2.new(0.5, 0.5)
-Frame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-Frame.BorderSizePixel = 0
-Instance.new("UIStroke", Frame).Color = Color3.fromRGB(0, 255, 100)
-
--- Title
-local Title = Instance.new("TextLabel", Frame)
-Title.Size = UDim2.new(1, 0, 0, 30)
-Title.Text = "LynxIT | Visual Script v2"
-Title.BackgroundTransparency = 1
-Title.TextColor3 = Color3.fromRGB(0, 255, 100)
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 20
-
--- Author
-local Author = Instance.new("TextLabel", Frame)
-Author.Size = UDim2.new(1, 0, 0, 18)
-Author.Position = UDim2.new(0, 0, 0, 30)
-Author.Text = "@bannedPaul._"
-Author.BackgroundTransparency = 1
-Author.TextColor3 = Color3.fromRGB(200, 200, 200)
-Author.Font = Enum.Font.Gotham
-Author.TextSize = 14
-
--- Dragging
-local dragging, dragStart, startPos
-Frame.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = true
-		dragStart = input.Position
-		startPos = Frame.Position
-	end
-end)
-Frame.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
-end)
-UIS.InputChanged:Connect(function(input)
-	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-		local delta = input.Position - dragStart
-		Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-	end
-end)
-
--- Toggle with CTRL
-UIS.InputBegan:Connect(function(input, gp)
-	if input.KeyCode == Enum.KeyCode.LeftControl and not gp then
-		Frame.Visible = not Frame.Visible
-	end
-end)
-
--- Reset Button Colors
 local function resetColors()
-	for _, b in pairs(buttons) do
-		b.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	for _, btn in pairs(buttons) do
+		btn.TextColor3 = Color3.new(1, 1, 1)
+		btn.UIStroke.Color = Color3.fromRGB(40, 40, 40)
 	end
 end
 
--- Buttons
-for i, t in ipairs(buttonTypes) do
-	local btn = Instance.new("TextButton", Frame)
-	btn.Size = UDim2.new(0, 100, 0, 28)
-	btn.Position = UDim2.new(0, 10 + ((i - 1) % 4) * 110, 0, 55 + math.floor((i - 1) / 4) * 35)
-	btn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-	btn.Text = t
-	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	btn.Font = Enum.Font.Gotham
-	btn.TextSize = 14
-	btn.BorderSizePixel = 0
-	Instance.new("UIStroke", btn).Color = Color3.fromRGB(0, 255, 100)
+for i, type in ipairs(buttonTypes) do
+	local btn = Instance.new("TextButton", Main)
+	btn.Size = UDim2.new(0, 90, 0, 35)
+	btn.Position = UDim2.new(0, 15 + ((i - 1) % 4) * 115, 0, 70 + math.floor((i - 1) / 4) * 40)
+	btn.BackgroundColor3 = Color3.fromRGB(20, 30, 20)
+	btn.Text = (type == "NP") and "NP (None)" or type
+	btn.Font = Enum.Font.GothamBold
+	btn.TextScaled = true
+	btn.TextColor3 = Color3.new(1, 1, 1)
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+	
+	local stroke = Instance.new("UIStroke", btn)
+	stroke.Color = Color3.fromRGB(40, 40, 40)
+
+	local gradient = Instance.new("UIGradient", btn)
+	gradient.Color = ColorSequence.new{
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(10, 80, 10)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 100))
+	}
 
 	btn.MouseButton1Click:Connect(function()
 		resetColors()
-		btn.BackgroundColor3 = Color3.fromRGB(0, 100, 50)
-		petType = t
+		petType = type
+		btn.TextColor3 = Color3.fromRGB(25, 255, 21)
+		stroke.Color = Color3.fromRGB(0, 255, 100)
 	end)
 
 	table.insert(buttons, btn)
 end
 
 -- Pet Name Input
-local NameBox = Instance.new("TextBox", Frame)
-NameBox.Size = UDim2.new(0, 460, 0, 28)
-NameBox.Position = UDim2.new(0, 10, 1, -65)
-NameBox.PlaceholderText = "Enter Pet Name"
+local NameBox = Instance.new("TextBox", Main)
+NameBox.Size = UDim2.new(0, 400, 0, 40)
+NameBox.Position = UDim2.new(0.5, -200, 1, -90)
+NameBox.PlaceholderText = "Enter Pet Name..."
+NameBox.Text = ""
 NameBox.Font = Enum.Font.Gotham
-NameBox.TextSize = 14
-NameBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-NameBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-NameBox.BorderSizePixel = 0
-Instance.new("UIStroke", NameBox).Color = Color3.fromRGB(0, 255, 100)
+NameBox.TextScaled = true
+NameBox.TextColor3 = Color3.new(1, 1, 1)
+NameBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Instance.new("UICorner", NameBox).CornerRadius = UDim.new(0, 8)
+Instance.new("UIStroke", NameBox).Color = Color3.fromRGB(50, 255, 100)
 
 -- Spawn Button
-local Spawn = Instance.new("TextButton", Frame)
-Spawn.Size = UDim2.new(0, 200, 0, 30)
-Spawn.Position = UDim2.new(0.5, -100, 1, -30)
+local Spawn = Instance.new("TextButton", Main)
+Spawn.Size = UDim2.new(0, 180, 0, 40)
+Spawn.Position = UDim2.new(0.5, -90, 1, -40)
 Spawn.Text = "Spawn Pet"
-Spawn.Font = Enum.Font.GothamBold
-Spawn.TextSize = 14
+Spawn.Font = Enum.Font.GothamBlack
+Spawn.TextScaled = true
 Spawn.TextColor3 = Color3.fromRGB(255, 255, 255)
-Spawn.BackgroundColor3 = Color3.fromRGB(0, 100, 50)
+Spawn.BackgroundColor3 = Color3.fromRGB(20, 80, 20)
+Instance.new("UICorner", Spawn).CornerRadius = UDim.new(0, 10)
 Instance.new("UIStroke", Spawn).Color = Color3.fromRGB(0, 255, 100)
-Spawn.BorderSizePixel = 0
 
--- Footer Discord Info
-local Discord = Instance.new("TextLabel", Frame)
-Discord.Size = UDim2.new(1, 0, 0, 18)
-Discord.Position = UDim2.new(0, 0, 1, -15)
-Discord.Text = "discord.gg/lynxit"
-Discord.BackgroundTransparency = 1
-Discord.TextColor3 = Color3.fromRGB(150, 255, 150)
-Discord.Font = Enum.Font.Gotham
-Discord.TextSize = 13
-
--- Logic
+-- Pet Generation Logic
 local function generate_props()
+	if petType == "NP" then
+		return { age = 1 }
+	end
+
 	return {
 		flyable = petType:find("F") ~= nil,
 		rideable = petType:find("R") ~= nil,
-		neon = petType:find("N") and not petType:find("M"),
+		neon = petType:find("N") and not petType:find("NP"),
 		mega_neon = petType:find("M") ~= nil,
 		age = 1
 	}
 end
 
-local function clone(tbl)
-	local new = {}
-	for k, v in pairs(tbl) do
-		new[k] = typeof(v) == "table" and clone(v) or v
+local function clone(t)
+	local c = {}
+	for k, v in pairs(t) do
+		c[k] = typeof(v) == "table" and clone(v) or v
 	end
-	return new
+	return c
 end
 
-local function duplicatePet(petName)
+local function duplicatePet(name)
 	local Loads = require(game.ReplicatedStorage.Fsys).load
 	local ClientData = Loads("ClientData")
 	local InventoryDB = Loads("InventoryDB")
@@ -155,7 +213,7 @@ local function duplicatePet(petName)
 
 	for _, pets in pairs(InventoryDB) do
 		for id, item in pairs(pets) do
-			if item.name:lower() == petName:lower() then
+			if item.name:lower() == name:lower() then
 				local newItem = clone(item)
 				local uuid = "uuid_" .. game.HttpService:GenerateGUID()
 				newItem.unique = uuid
@@ -170,8 +228,32 @@ local function duplicatePet(petName)
 	end
 end
 
+-- Button Actions
 Spawn.MouseButton1Click:Connect(function()
 	if NameBox.Text ~= "" then
 		duplicatePet(NameBox.Text)
+	end
+end)
+
+Confirm.MouseButton1Click:Connect(function()
+	local enteredKey = KeyBox.Text
+	if allowedKeys[enteredKey] and not usedKeys[enteredKey] then
+		usedKeys[enteredKey] = true
+		KeyFrame:Destroy()
+		showMainUI()
+	elseif usedKeys[enteredKey] then
+		KeyBox.Text = ""
+		KeyBox.PlaceholderText = "Key Already Used"
+		keyStroke.Color = Color3.fromRGB(255, 120, 0)
+		task.wait(1)
+		keyStroke.Color = Color3.fromRGB(0, 255, 100)
+		KeyBox.PlaceholderText = "Token Required..."
+	else
+		KeyBox.Text = ""
+		KeyBox.PlaceholderText = "Invalid Key"
+		keyStroke.Color = Color3.fromRGB(255, 0, 0)
+		task.wait(1)
+		keyStroke.Color = Color3.fromRGB(0, 255, 100)
+		KeyBox.PlaceholderText = "Token Required..."
 	end
 end)
