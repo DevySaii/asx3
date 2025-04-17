@@ -38,7 +38,7 @@ TweenService:Create(KeyFrame, TweenInfo.new(0.4), {
 local KeyBox = Instance.new("TextBox", KeyFrame)
 KeyBox.Size = UDim2.new(0, 300, 0, 40)
 KeyBox.Position = UDim2.new(0.5, -150, 0, 50)
-KeyBox.PlaceholderText = "Token Required..."
+KeyBox.PlaceholderText = "KEY-*******"
 KeyBox.Text = ""
 KeyBox.Font = Enum.Font.Gotham
 KeyBox.TextScaled = true
