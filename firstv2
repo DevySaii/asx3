@@ -1,18 +1,7 @@
 -- LynxIT Visual Script v2 – Pet Spawner with One-Time Token and Gradient UI
 
 local allowedKeys = {
-	["KEY-daRfjQOyuIsPupQNMXiiGPQKucsDthlw"] = true,
-	["KEY-VoMAHmWmEhqXthMJYMjDpaAcYOLCJDfY"] = true,
-	["KEY-AOvBASTjaLteGsmHsBJIPDaTGlVUaOrK"] = true,
-	["KEY-nFlFOLWjRCrsKGiPgshTEeqJRQxlSBLF"] = true,
-	["KEY-meUcMhdHMtgTTZkbxgWIvjhibGttSFeG"] = true,
-	["KEY-BjbnQAuFxxUSiivcampcRusdtVXgGtsW"] = true,
-	["KEY-BoYiXDxrWstpWSkrMuBSHDGOTidmicRn"] = true,
-	["KEY-gkhmNKYJIqGHQGhXNNLOIEhvqQmVBCqH"] = true,
-	["KEY-tIcMMsjIKtcoWscTkclUYHfcaruFfUup"] = true,
-	["KEY-ZnsippWoYQGenHWWtfXSxqdgtoPiOFNN"] = true,
-	["KEY-hDtCDDwPIMQgZQgbWTTcJOMemXVekwIh"] = true,
-	["KEY-UZPdgoXDYwupnyDEEbdmZYEsqfivEJOo"] = true,
+	["KEY-BaYot147"] = true,
 }
 
 local usedKeys = {}
