@@ -1,57 +1,241 @@
--- StarterPlayer > StarterPlayerScripts > LocalScript
+-- Roblox Pet Spawner GUI with Key System + 13 Pet Types
+-- Author: Saii (modified with key check)
 
-local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
-local localPlayer = Players.LocalPlayer
-
--- === 🔧 CONFIG: Replace any pet name with a spoofed one and image ===
-local petSpoofs = {
-    ["Bee"] = {
-        newName = "Bat Dragon",
-        newImage = "rbxassetid://14972007526"
-    },
-    ["Gold Cube"] = {
-        newName = "Frost Dragon",
-        newImage = "rbxassetid://7202980977"
-    },
-    ["Burning Bunny"] = {
-        newName = "Shadow Dragon",
-        newImage = "rbxassetid://12540769437"
-    },
-    -- Add more here!
+local allowedKeys = {
+    ["FZNWEYDSCVHJS#$FGDVCSETDVCDFGASWERDBHFJTOKYTE"] = true,
+    ["ARrWBBRTERNMTgTYREDFHGSDFTwAWDFVvRWDFHJSEWTDAARE"] = true,
 }
 
--- === 📦 Get the trade GUI ===
-local function getTradeGui()
-    local playerGui = localPlayer:FindFirstChild("PlayerGui")
-    if not playerGui then return end
+local petType = "NP"
 
-    -- Replace this name if your GUI is named differently
-    return playerGui:FindFirstChild("TradeUI")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- GUI Base
+local Spawner = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+Spawner.Name = "Spawner"
+Spawner.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+Spawner.ResetOnSpawn = false
+
+-- === KEY UI ===
+local KeyFrame = Instance.new("Frame", Spawner)
+KeyFrame.Size = UDim2.new(0, 400, 0, 200)
+KeyFrame.Position = UDim2.new(0.5, -200, 0.5, -100)
+KeyFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 12)
+
+local KeyBox = Instance.new("TextBox", KeyFrame)
+KeyBox.Size = UDim2.new(0, 300, 0, 40)
+KeyBox.Position = UDim2.new(0.5, -150, 0, 50)
+KeyBox.PlaceholderText = "Enter Access Key..."
+KeyBox.Font = Enum.Font.Gotham
+KeyBox.TextScaled = true
+KeyBox.TextColor3 = Color3.new(1,1,1)
+KeyBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 8)
+local keyStroke = Instance.new("UIStroke", KeyBox)
+keyStroke.Color = Color3.fromRGB(0, 255, 100)
+
+local Confirm = Instance.new("TextButton", KeyFrame)
+Confirm.Size = UDim2.new(0, 180, 0, 35)
+Confirm.Position = UDim2.new(0.5, -90, 1, -60)
+Confirm.Text = "🔓 Unlock"
+Confirm.Font = Enum.Font.GothamBold
+Confirm.TextScaled = true
+Confirm.TextColor3 = Color3.new(1,1,1)
+Confirm.BackgroundColor3 = Color3.fromRGB(20, 80, 20)
+Instance.new("UICorner", Confirm).CornerRadius = UDim.new(0, 10)
+local unlockStroke = Instance.new("UIStroke", Confirm)
+unlockStroke.Color = Color3.fromRGB(0, 255, 100)
+
+-- MAIN UI
+local Main = Instance.new("Frame")
+Main.Size = UDim2.new(0, 500, 0, 340)
+Main.Position = UDim2.new(0.5, -250, 0.5, -170)
+Main.AnchorPoint = Vector2.new(0.5, 0.5)
+Main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Main.BackgroundTransparency = 0.1
+Main.BorderSizePixel = 0
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
+local mainStroke = Instance.new("UIStroke", Main)
+mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+mainStroke.Color = Color3.fromRGB(40, 255, 60)
+mainStroke.Thickness = 1
+Main.Visible = false
+Main.Parent = Spawner
+
+-- Drag
+local dragging, dragStart, startPos
+Main.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = Main.Position
+	end
+end)
+Main.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = false
+	end
+end)
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+		local delta = input.Position - dragStart
+		Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+end)
+
+-- Title
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.Text = "⚡ Saii's Pet Spawner"
+Title.Font = Enum.Font.GothamBlack
+Title.TextSize = 24
+Title.TextColor3 = Color3.fromRGB(0, 255, 100)
+Title.BackgroundTransparency = 1
+
+-- Buttons
+local buttonTypes = {"NP", "F", "R", "FR", "N", "NR", "NF", "NFR", "M", "MR", "MF", "MFR"}
+local buttons = {}
+
+local function resetColors()
+	for _, btn in pairs(buttons) do
+		btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		btn.UIStroke.Color = Color3.fromRGB(40, 40, 40)
+	end
 end
 
--- === 🪄 Replace pets visually in your side of the trade UI ===
-local function spoofTradePets()
-    local gui = getTradeGui()
-    if not gui then return end
+for i, name in ipairs(buttonTypes) do
+	local btn = Instance.new("TextButton", Main)
+	btn.Size = UDim2.new(0, 90, 0, 35)
+	btn.Position = UDim2.new(0, 15 + ((i - 1) % 4) * 115, 0, 50 + math.floor((i - 1) / 4) * 40)
+	btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	btn.Text = name
+	btn.Font = Enum.Font.GothamBold
+	btn.TextScaled = true
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
 
-    -- Adjust to your side's frame in trade UI
-    local yourSide = gui:FindFirstChild("YourOfferFrame") or gui:FindFirstChild("LeftSide")
-    if not yourSide then return end
+	local corner = Instance.new("UICorner", btn)
+	corner.CornerRadius = UDim.new(0, 8)
 
-    for _, slot in ipairs(yourSide:GetDescendants()) do
-        if slot:IsA("ImageLabel") then
-            local nameLabel = slot:FindFirstChild("PetName") or slot:FindFirstChildWhichIsA("TextLabel")
-            if nameLabel and petSpoofs[nameLabel.Text] then
-                local spoof = petSpoofs[nameLabel.Text]
-                nameLabel.Text = spoof.newName
-                slot.Image = spoof.newImage
-            end
-        end
-    end
+	local stroke = Instance.new("UIStroke", btn)
+	stroke.Color = Color3.fromRGB(40, 40, 40)
+	stroke.Thickness = 1
+
+	btn.MouseEnter:Connect(function()
+		if petType ~= name then
+			btn.TextColor3 = Color3.fromRGB(80, 255, 80)
+		end
+	end)
+	btn.MouseLeave:Connect(function()
+		if petType ~= name then
+			btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		end
+	end)
+	btn.MouseButton1Click:Connect(function()
+		resetColors()
+		btn.TextColor3 = Color3.fromRGB(25, 255, 21)
+		btn.UIStroke.Color = Color3.fromRGB(0, 255, 100)
+		petType = name
+	end)
+
+	table.insert(buttons, btn)
 end
 
--- 🔁 Continuously spoof the visuals every frame
-RunService.RenderStepped:Connect(function()
-    pcall(spoofTradePets)
+-- Pet Name Input
+local NameBox = Instance.new("TextBox", Main)
+NameBox.Size = UDim2.new(0, 400, 0, 40)
+NameBox.Position = UDim2.new(0.5, -200, 1, -90)
+NameBox.PlaceholderText = "Enter Pet Name..."
+NameBox.Text = ""
+NameBox.Font = Enum.Font.Gotham
+NameBox.TextScaled = true
+NameBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+NameBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Instance.new("UICorner", NameBox).CornerRadius = UDim.new(0, 8)
+local nameStroke = Instance.new("UIStroke", NameBox)
+nameStroke.Color = Color3.fromRGB(50, 255, 100)
+nameStroke.Thickness = 1
+
+-- Spawn Button
+local Spawn = Instance.new("TextButton", Main)
+Spawn.Size = UDim2.new(0, 180, 0, 40)
+Spawn.Position = UDim2.new(0.5, -90, 1, -40)
+Spawn.Text = "🎯 Spawn Pet"
+Spawn.Font = Enum.Font.GothamBlack
+Spawn.TextScaled = true
+Spawn.TextColor3 = Color3.fromRGB(255, 255, 255)
+Spawn.BackgroundColor3 = Color3.fromRGB(20, 80, 20)
+Instance.new("UICorner", Spawn).CornerRadius = UDim.new(0, 10)
+local spawnStroke = Instance.new("UIStroke", Spawn)
+spawnStroke.Color = Color3.fromRGB(0, 255, 100)
+spawnStroke.Thickness = 2
+
+-- Logic
+local function generate_props()
+	local props = {
+		flyable = false,
+		rideable = false,
+		neon = false,
+		mega_neon = false,
+		age = 1
+	}
+	if petType == "F" or petType == "FR" or petType == "NF" or petType == "NFR" or petType == "MF" or petType == "MFR" then props.flyable = true end
+	if petType == "R" or petType == "FR" or petType == "NR" or petType == "NFR" or petType == "MR" or petType == "MFR" then props.rideable = true end
+	if petType == "N" or petType == "NR" or petType == "NF" or petType == "NFR" then props.neon = true end
+	if petType == "M" or petType == "MR" or petType == "MF" or petType == "MFR" then props.mega_neon = true end
+	return props
+end
+
+local function clone(original)
+	local copy = {}
+	for k, v in pairs(original) do
+		copy[k] = typeof(v) == "table" and clone(v) or v
+	end
+	return copy
+end
+
+local function duplicatePet(petName)
+	local Loads = require(game.ReplicatedStorage.Fsys).load
+	local ClientData = Loads("ClientData")
+	local InventoryDB = Loads("InventoryDB")
+	local Inventory = ClientData.get("inventory")
+
+	for _, pets in pairs(InventoryDB) do
+		for id, item in pairs(pets) do
+			if item.name:lower() == petName:lower() then
+				local newItem = clone(item)
+				local uuid = "uuid_" .. game.HttpService:GenerateGUID()
+				newItem.unique = uuid
+				newItem.category = "pets"
+				newItem.properties = generate_props()
+				newItem.newness_order = math.random(1, 900000)
+				Inventory.pets = Inventory.pets or {}
+				Inventory.pets[uuid] = newItem
+				return
+			end
+		end
+	end
+end
+
+Spawn.MouseButton1Click:Connect(function()
+	if NameBox.Text ~= "" then
+		duplicatePet(NameBox.Text)
+	end
+end)
+
+-- 🔐 Key Check
+Confirm.MouseButton1Click:Connect(function()
+	local enteredKey = KeyBox.Text
+	if allowedKeys[enteredKey] then
+		KeyFrame.Visible = false
+		Main.Visible = true
+	else
+		KeyBox.Text = ""
+		KeyBox.PlaceholderText = "❌ Invalid Key"
+		keyStroke.Color = Color3.fromRGB(255, 0, 0)
+		wait(1)
+		keyStroke.Color = Color3.fromRGB(0, 255, 100)
+		KeyBox.PlaceholderText = "Enter Access Key..."
+	end
 end)
