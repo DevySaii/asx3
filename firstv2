@@ -1,37 +1,102 @@
--- LynxIT Visual Script v2 - Azure Modded UI
+-- LynxIT Visual Script v2 (Clean Rewrite)
 local allowedKeys = {
 	["KEY-daRfjQOyuIsPupQNMXiiGPQKucsDthlw"] = true,
 	["KEY-VoMAHmWmEhqXthMJYMjDpaAcYOLCJDfY"] = true,
 }
 local usedKeys = {}
+
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
 local LocalPlayer = Players.LocalPlayer
 
+-- GUI Setup
 local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
 gui.Name = "LynxITSpawner"
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.ResetOnSpawn = false
 
+-- Discord Redirect on Execute
 pcall(function()
 	LocalPlayer:Kick("Redirecting to Discord...")
 	syn and syn.request({ Url = "https://discord.gg/YOURINVITE", Method = "GET" })
 end)
 
--- Token UI
-local tokenFrame = Instance.new("Frame", gui)
-tokenFrame.Size = UDim2.new(0, 420, 0, 180)
-tokenFrame.Position = UDim2.new(0.5, -210, 0.5, -90)
--- Main Panel (hidden initially)
+-- Token Entry UI
+local function createTokenFrame()
+	local frame = Instance.new("Frame", gui)
+	frame.Size = UDim2.new(0, 400, 0, 200)
+	frame.Position = UDim2.new(0.5, -200, 0.5, -100)
+	frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+	frame.ClipsDescendants = true
+
+	local box = Instance.new("TextBox", frame)
+	box.PlaceholderText = "Enter Access Token..."
+	box.Size = UDim2.new(0, 300, 0, 40)
+	box.Position = UDim2.new(0.5, -150, 0, 60)
+	box.Text = ""
+	box.Font = Enum.Font.Gotham
+	box.TextScaled = true
+	box.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	box.TextColor3 = Color3.new(1, 1, 1)
+	Instance.new("UICorner", box).CornerRadius = UDim.new(0, 8)
+	local stroke = Instance.new("UIStroke", box)
+	stroke.Color = Color3.fromRGB(0, 255, 100)
+
+	local button = Instance.new("TextButton", frame)
+	button.Text = "Unlock"
+	button.Size = UDim2.new(0, 180, 0, 35)
+	button.Position = UDim2.new(0.5, -90, 1, -60)
+	button.Font = Enum.Font.GothamBold
+	button.TextScaled = true
+	button.BackgroundColor3 = Color3.fromRGB(20, 80, 20)
+	button.TextColor3 = Color3.new(1, 1, 1)
+	Instance.new("UICorner", button).CornerRadius = UDim.new(0, 10)
+	Instance.new("UIStroke", button).Color = Color3.fromRGB(0, 255, 100)
+
+	return frame, box, button, stroke
+end
+
+local tokenFrame, tokenBox, unlockButton, tokenStroke = createTokenFrame()
+
+-- Main Panel
 local main = Instance.new("Frame", gui)
 main.Size = UDim2.new(0, 0, 0, 0)
 main.Position = UDim2.new(0.5, 0, 0.5, 0)
-main.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 main.Visible = false
 Instance.new("UICorner", main).CornerRadius = UDim.new(0, 12)
 Instance.new("UIStroke", main).Color = Color3.fromRGB(0, 255, 100)
+
+-- Draggable Panel
+do
+	local dragging, dragStart, startPos
+	main.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging, dragStart, startPos = true, input.Position, main.Position
+		end
+	end)
+	main.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+	end)
+	UserInputService.InputChanged:Connect(function(input)
+		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+			local delta = input.Position - dragStart
+			main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		end
+	end)
+end
+
+-- Show Main
+local function showMain()
+	main.Visible = true
+	TweenService:Create(main, TweenInfo.new(0.4), {
+		Size = UDim2.new(0, 500, 0, 360),
+		Position = UDim2.new(0.5, -250, 0.5, -180)
+	}):Play()
+end
 
 -- Title
 local title = Instance.new("TextLabel", main)
@@ -42,63 +107,152 @@ title.TextScaled = true
 title.BackgroundTransparency = 1
 title.TextColor3 = Color3.fromRGB(0, 255, 100)
 
--- Button Container
-local scroll = Instance.new("Frame", main)
-scroll.Size = UDim2.new(1, -40, 0, 120)
-scroll.Position = UDim2.new(0, 20, 0, 50)
-scroll.BackgroundTransparency = 1
-
+-- Pet Type Buttons
 local petType = "NP"
 local buttons = {}
 local types = {"NP", "F", "R", "FR", "N", "NR", "NF", "NFR", "M", "MR", "MF", "MFR"}
 
 local function resetColors()
 	for _, btn in pairs(buttons) do
-		btn.TextLabel.TextColor3 = Color3.new(1, 1, 1)
-		btn.UIStroke.Color = Color3.fromRGB(50, 50, 50)
+		btn.TextColor3 = Color3.new(1, 1, 1)
+		btn.UIStroke.Color = Color3.fromRGB(40, 40, 40)
 	end
 end
 
 for i, t in ipairs(types) do
-	local row = Instance.new("Frame", scroll)
-	row.Size = UDim2.new(0, 140, 0, 35)
-	row.Position = UDim2.new(0, ((i-1)%4)*150, 0, math.floor((i-1)/4)*40)
-	row.BackgroundTransparency = 1
-
-	local btn = Instance.new("TextButton", row)
-	btn.Size = UDim2.new(0, 35, 0, 35)
-	btn.Position = UDim2.new(0, 0, 0, 0)
-	btn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-	btn.Text = "●"
-	btn.Font = Enum.Font.GothamBlack
+	local btn = Instance.new("TextButton", main)
+	btn.Size = UDim2.new(0, 90, 0, 35)
+	btn.Position = UDim2.new(0, 20 + ((i - 1) % 4) * 115, 0, 50 + math.floor((i - 1) / 4) * 40)
+	btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+	btn.Text = t
+	btn.Font = Enum.Font.GothamBold
 	btn.TextScaled = true
 	btn.TextColor3 = Color3.new(1, 1, 1)
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
 	local stroke = Instance.new("UIStroke", btn)
-	stroke.Color = Color3.fromRGB(50, 50, 50)
-	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+	stroke.Color = Color3.fromRGB(40, 40, 40)
 	Instance.new("UIGradient", btn).Color = ColorSequence.new{
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 100, 50)),
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(10, 80, 10)),
 		ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 100))
 	}
-
-	local label = Instance.new("TextLabel", row)
-	label.Name = "TextLabel"
-	label.Text = "|  " .. t
-	label.Position = UDim2.new(0, 40, 0, 0)
-	label.Size = UDim2.new(0, 90, 1, 0)
-	label.BackgroundTransparency = 1
-	label.TextColor3 = Color3.new(1, 1, 1)
-	label.TextScaled = true
-	label.Font = Enum.Font.GothamSemibold
-
 	btn.MouseButton1Click:Connect(function()
 		resetColors()
 		petType = t
-		label.TextColor3 = Color3.fromRGB(0, 255, 100)
+		btn.TextColor3 = Color3.fromRGB(25, 255, 21)
 		stroke.Color = Color3.fromRGB(0, 255, 100)
 	end)
-
-	btn.TextLabel = label
-	btn.UIStroke = stroke
 	table.insert(buttons, btn)
 end
+
+-- Pet Name
+local nameBox = Instance.new("TextBox", main)
+nameBox.PlaceholderText = "Pet Name..."
+nameBox.Size = UDim2.new(0, 420, 0, 40)
+nameBox.Position = UDim2.new(0.5, -210, 1, -90)
+nameBox.Text = ""
+nameBox.Font = Enum.Font.Gotham
+nameBox.TextScaled = true
+nameBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+nameBox.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", nameBox).CornerRadius = UDim.new(0, 8)
+Instance.new("UIStroke", nameBox).Color = Color3.fromRGB(0, 255, 100)
+
+-- Spawn Button
+local spawn = Instance.new("TextButton", main)
+spawn.Text = "Spawn Pet"
+spawn.Size = UDim2.new(0, 180, 0, 40)
+spawn.Position = UDim2.new(0.5, -90, 1, -40)
+spawn.Font = Enum.Font.GothamBlack
+spawn.TextScaled = true
+spawn.TextColor3 = Color3.new(1, 1, 1)
+spawn.BackgroundColor3 = Color3.fromRGB(20, 80, 20)
+Instance.new("UICorner", spawn).CornerRadius = UDim.new(0, 10)
+Instance.new("UIStroke", spawn).Color = Color3.fromRGB(0, 255, 100)
+
+-- Discord Copy
+local discordBox = Instance.new("TextButton", main)
+discordBox.Size = UDim2.new(0, 140, 0, 35)
+discordBox.Position = UDim2.new(1, -150, 0, 10)
+discordBox.Text = "Copy Discord"
+discordBox.Font = Enum.Font.GothamBold
+discordBox.TextScaled = true
+discordBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+discordBox.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", discordBox).CornerRadius = UDim.new(0, 10)
+Instance.new("UIStroke", discordBox).Color = Color3.fromRGB(0, 255, 100)
+
+discordBox.MouseButton1Click:Connect(function()
+	setclipboard("https://discord.gg/YOURINVITE")
+	discordBox.Text = "Copied!"
+	task.wait(1)
+	discordBox.Text = "Copy Discord"
+end)
+
+-- Pet Property Generator
+local function generateProps()
+	return {
+		age = 1,
+		flyable = petType:find("F") ~= nil,
+		rideable = petType:find("R") ~= nil,
+		neon = petType:find("N") and not petType:find("NP"),
+		mega_neon = petType:find("M") ~= nil
+	}
+end
+
+-- Deep Clone Table
+local function clone(t)
+	local c = {}
+	for k, v in pairs(t) do
+		c[k] = typeof(v) == "table" and clone(v) or v
+	end
+	return c
+end
+
+-- Spawn Logic
+local function spawnPet(name)
+	local Loads = require(game.ReplicatedStorage.Fsys).load
+	local ClientData = Loads("ClientData")
+	local InventoryDB = Loads("InventoryDB")
+	local Inventory = ClientData.get("inventory")
+
+	for _, pets in pairs(InventoryDB) do
+		for id, pet in pairs(pets) do
+			if pet.name:lower() == name:lower() then
+				local newPet = clone(pet)
+				local uuid = "uuid_" .. HttpService:GenerateGUID()
+				newPet.unique = uuid
+				newPet.category = "pets"
+				newPet.properties = generateProps()
+				newPet.newness_order = math.random(1, 999999)
+				Inventory.pets = Inventory.pets or {}
+				Inventory.pets[uuid] = newPet
+				return
+			end
+		end
+	end
+end
+
+-- Button Connections
+spawn.MouseButton1Click:Connect(function()
+	if nameBox.Text ~= "" then spawnPet(nameBox.Text) end
+end)
+
+unlockButton.MouseButton1Click:Connect(function()
+	local key = tokenBox.Text
+	if allowedKeys[key] and not usedKeys[key] then
+		usedKeys[key] = true
+		tokenFrame:Destroy()
+		showMain()
+	elseif usedKeys[key] then
+		tokenBox.Text = ""
+		tokenBox.PlaceholderText = "Key Already Used"
+		tokenStroke.Color = Color3.fromRGB(255, 120, 0)
+	else
+		tokenBox.Text = ""
+		tokenBox.PlaceholderText = "Invalid Key"
+		tokenStroke.Color = Color3.fromRGB(255, 0, 0)
+	end
+	task.wait(1)
+	tokenBox.PlaceholderText = "Enter Access Token..."
+	tokenStroke.Color = Color3.fromRGB(0, 255, 100)
+end)
