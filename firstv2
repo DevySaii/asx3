@@ -1,191 +1,20 @@
--- Roblox Pet Spawner GUI with 13 Pet Types (Smooth UI)
--- Author: Saii
-
-local petType = "NP"
-
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
-
--- GUI Setup
-local Spawner = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
-Spawner.Name = "Spawner"
-Spawner.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-Spawner.ResetOnSpawn = false
-
-local Main = Instance.new("Frame", Spawner)
-Main.Size = UDim2.new(0, 500, 0, 340)
-Main.Position = UDim2.new(0.5, -250, 0.5, -170)
-Main.AnchorPoint = Vector2.new(0.5, 0.5)
-Main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-Main.BackgroundTransparency = 0.1
-Main.BorderSizePixel = 0
-
-Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
-local mainStroke = Instance.new("UIStroke", Main)
-mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-mainStroke.Color = Color3.fromRGB(40, 255, 60)
-mainStroke.Thickness = 1
-
--- Drag Support
-local dragging, dragStart, startPos
-Main.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = true
-		dragStart = input.Position
-		startPos = Main.Position
-	end
-end)
-
-Main.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = false
-	end
-end)
-
-game:GetService("UserInputService").InputChanged:Connect(function(input)
-	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-		local delta = input.Position - dragStart
-		Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-	end
-end)
-
--- Title Label
-local Title = Instance.new("TextLabel", Main)
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.Position = UDim2.new(0, 0, 0, 0)
-Title.Text = "⚡ Saii's Pet Spawner"
-Title.Font = Enum.Font.GothamBlack
-Title.TextSize = 24
-Title.TextColor3 = Color3.fromRGB(0, 255, 100)
-Title.BackgroundTransparency = 1
-
--- Pet Type Buttons
-local buttonTypes = {"NP", "F", "R", "FR", "N", "NR", "NF", "NFR", "M", "MR", "MF", "MFR"}
-local buttons = {}
-
-local function resetColors()
-	for _, btn in pairs(buttons) do
-		btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		btn.UIStroke.Color = Color3.fromRGB(40, 40, 40)
-	end
-end
-
-for i, name in ipairs(buttonTypes) do
-	local btn = Instance.new("TextButton", Main)
-	btn.Size = UDim2.new(0, 90, 0, 35)
-	btn.Position = UDim2.new(0, 15 + ((i - 1) % 4) * 115, 0, 50 + math.floor((i - 1) / 4) * 40)
-	btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-	btn.Text = name
-	btn.Font = Enum.Font.GothamBold
-	btn.TextScaled = true
-	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-
-	local corner = Instance.new("UICorner", btn)
-	corner.CornerRadius = UDim.new(0, 8)
-
-	local stroke = Instance.new("UIStroke", btn)
-	stroke.Color = Color3.fromRGB(40, 40, 40)
-	stroke.Thickness = 1
-
-	btn.MouseEnter:Connect(function()
-		if petType ~= name then
-			btn.TextColor3 = Color3.fromRGB(80, 255, 80)
-		end
-	end)
-
-	btn.MouseLeave:Connect(function()
-		if petType ~= name then
-			btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		end
-	end)
-
-	btn.MouseButton1Click:Connect(function()
-		resetColors()
-		btn.TextColor3 = Color3.fromRGB(25, 255, 21)
-		btn.UIStroke.Color = Color3.fromRGB(0, 255, 100)
-		petType = name
-	end)
-
-	table.insert(buttons, btn)
-end
-
--- Pet Name Input
-local NameBox = Instance.new("TextBox", Main)
-NameBox.Size = UDim2.new(0, 400, 0, 40)
-NameBox.Position = UDim2.new(0.5, -200, 1, -90)
-NameBox.PlaceholderText = "Enter Pet Name..."
-NameBox.Text = ""
-NameBox.Font = Enum.Font.Gotham
-NameBox.TextScaled = true
-NameBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-NameBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-Instance.new("UICorner", NameBox).CornerRadius = UDim.new(0, 8)
-local nameStroke = Instance.new("UIStroke", NameBox)
-nameStroke.Color = Color3.fromRGB(50, 255, 100)
-nameStroke.Thickness = 1
-
--- Spawn Button
-local Spawn = Instance.new("TextButton", Main)
-Spawn.Size = UDim2.new(0, 180, 0, 40)
-Spawn.Position = UDim2.new(0.5, -90, 1, -40)
-Spawn.Text = "🎯 Spawn Pet"
-Spawn.Font = Enum.Font.GothamBlack
-Spawn.TextScaled = true
-Spawn.TextColor3 = Color3.fromRGB(255, 255, 255)
-Spawn.BackgroundColor3 = Color3.fromRGB(20, 80, 20)
-Instance.new("UICorner", Spawn).CornerRadius = UDim.new(0, 10)
-local spawnStroke = Instance.new("UIStroke", Spawn)
-spawnStroke.Color = Color3.fromRGB(0, 255, 100)
-spawnStroke.Thickness = 2
-
--- Property Generator (corrected logic)
-local function generate_props()
-	local props = {
-		flyable = false,
-		rideable = false,
-		neon = false,
-		mega_neon = false,
-		age = 1
-	}
-
-	if petType == "F" or petType == "FR" or petType == "NF" or petType == "NFR" or petType == "MF" or petType == "MFR" then
-		props.flyable = true
-	end
-	if petType == "R" or petType == "FR" or petType == "NR" or petType == "NFR" or petType == "MR" or petType == "MFR" then
-		props.rideable = true
-	end
-	if petType == "N" or petType == "NR" or petType == "NF" or petType == "NFR" then
-		props.neon = true
-	end
-	if petType == "M" or petType == "MR" or petType == "MF" or petType == "MFR" then
-		props.mega_neon = true
-	end
-
-	return props
-end
-
--- Clone Utility
-local function clone(original)
-	local copy = {}
-	for k, v in pairs(original) do
-		copy[k] = typeof(v) == "table" and clone(v) or v
-	end
-	return copy
-end
-
--- Duplicate Pet Function
 local function duplicatePet(petName)
-	local Loads = require(game.ReplicatedStorage.Fsys).load
+	local ok, Loads = pcall(function()
+		return require(game.ReplicatedStorage:WaitForChild("Fsys")).load
+	end)
+	if not ok then return end
+
 	local ClientData = Loads("ClientData")
 	local InventoryDB = Loads("InventoryDB")
 	local PetEquip = Loads("PetEquip")
 	local ClientState = Loads("ClientState")
 	local Inventory = ClientData.get("inventory")
 
+	if not Inventory or not InventoryDB then return end
+
 	for _, pets in pairs(InventoryDB) do
 		for id, item in pairs(pets) do
-			if item.name:lower() == petName:lower() then
+			if item.name and item.name:lower() == petName:lower() then
 				local newItem = clone(item)
 				local uuid = "uuid_" .. game.HttpService:GenerateGUID(false)
 				newItem.unique = uuid
@@ -195,16 +24,39 @@ local function duplicatePet(petName)
 				Inventory.pets = Inventory.pets or {}
 				Inventory.pets[uuid] = newItem
 				ClientState.set("equipped_pet", uuid)
-				PetEquip.equip(newItem)
+
+				if PetEquip and PetEquip.equip then
+					pcall(function()
+						PetEquip.equip(newItem)
+					end)
+				end
+
+				-- ✅ NEW: Spawn the visible pet model beside the player
+				local petFolder = game.ReplicatedStorage:FindFirstChild("Pets")
+				if petFolder then
+					local petModel = petFolder:FindFirstChild(item.name)
+					if petModel and petModel:IsA("Model") then
+						local clonedPet = petModel:Clone()
+						clonedPet.Name = petName .. "_Clone"
+						clonedPet.Parent = workspace
+
+						local rootPart = clonedPet:FindFirstChild("HumanoidRootPart") or clonedPet:FindFirstChildWhichIsA("BasePart")
+						if rootPart then
+							local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+							local hrp = char:FindFirstChild("HumanoidRootPart")
+							if hrp then
+								rootPart.CFrame = hrp.CFrame * CFrame.new(3, 0, 3)
+							end
+						end
+					else
+						warn("Model for pet '" .. item.name .. "' not found in ReplicatedStorage.Pets.")
+					end
+				else
+					warn("No 'Pets' folder in ReplicatedStorage.")
+				end
+
 				return
 			end
 		end
 	end
 end
-
--- Spawn Button Event
-Spawn.MouseButton1Click:Connect(function()
-	if NameBox.Text ~= "" then
-		duplicatePet(NameBox.Text)
-	end
-end)
