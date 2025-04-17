@@ -1,136 +1,99 @@
---// LynxIT Visual Script v2 (clean UI like Azure Modded)
-
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local StarterGui = game:GetService("StarterGui")
 local UIS = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
 
---// UI Creation
 local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
-ScreenGui.Name = "LynxITGui"
-ScreenGui.ResetOnSpawn = false
+ScreenGui.Name = "LynxIT_VisualScript_v2"
 
-local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 400, 0, 280)
-MainFrame.Position = UDim2.new(0.5, -200, 0.5, -140)
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-MainFrame.BorderSizePixel = 0
-MainFrame.Visible = true
-MainFrame.Active = true
-MainFrame.Draggable = true
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 250, 0, 350)
+Frame.Position = UDim2.new(0, 20, 0.5, -175)
+Frame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+Frame.BorderSizePixel = 0
+Frame.BackgroundTransparency = 0.1
 
-local UIStroke = Instance.new("UIStroke", MainFrame)
-UIStroke.Color = Color3.fromRGB(0, 255, 128)
+local UICorner = Instance.new("UICorner", Frame)
+UICorner.CornerRadius = UDim.new(0, 8)
+
+local UIStroke = Instance.new("UIStroke", Frame)
 UIStroke.Thickness = 2
+UIStroke.Color = Color3.fromRGB(0, 255, 100)
+UIStroke.Transparency = 0.2
 
-local Title = Instance.new("TextLabel", MainFrame)
+local Title = Instance.new("TextLabel", Frame)
 Title.Text = "LynxIT Visual Script v2"
 Title.Size = UDim2.new(1, 0, 0, 30)
 Title.BackgroundTransparency = 1
-Title.TextColor3 = Color3.fromRGB(0, 255, 128)
+Title.TextColor3 = Color3.fromRGB(0, 255, 100)
 Title.Font = Enum.Font.Code
-Title.TextSize = 18
+Title.TextSize = 16
 
--- Buttons
-local function createButton(text, yPos)
-	local button = Instance.new("TextButton", MainFrame)
-	button.Size = UDim2.new(0, 120, 0, 30)
-	button.Position = UDim2.new(0, 20, 0, yPos)
-	button.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-	button.BorderSizePixel = 0
-	button.Text = text
-	button.TextColor3 = Color3.fromRGB(0, 255, 128)
-	button.Font = Enum.Font.Code
-	button.TextSize = 16
+local UIListLayout = Instance.new("UIListLayout", Frame)
+UIListLayout.Padding = UDim.new(0, 6)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-	local stroke = Instance.new("UIStroke", button)
-	stroke.Color = Color3.fromRGB(0, 255, 128)
+Title.LayoutOrder = 0
 
-	return button
+local PetTypes = {
+    "NP", "F", "R", "FR",
+    "N", "NR", "NF", "NFR",
+    "M", "MR", "MF", "MFR"
+}
+
+local function createPetButton(petType)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, -20, 0, 30)
+    button.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    button.Text = "Spawn: " .. petType
+    button.Font = Enum.Font.Code
+    button.TextSize = 14
+    button.TextColor3 = Color3.fromRGB(0, 255, 100)
+    button.AutoButtonColor = true
+    button.LayoutOrder = #Frame:GetChildren()
+
+    local corner = Instance.new("UICorner", button)
+    corner.CornerRadius = UDim.new(0, 6)
+
+    local stroke = Instance.new("UIStroke", button)
+    stroke.Color = Color3.fromRGB(0, 255, 100)
+    stroke.Thickness = 1
+    stroke.Transparency = 0.5
+
+    button.MouseButton1Click:Connect(function()
+        local petName = "YourPetNameHere" -- CHANGE THIS TO YOUR PET NAME
+        local args = {
+            [1] = "SpawnPet",
+            [2] = {
+                ["Type"] = petType,
+                ["PetName"] = petName,
+                ["UserID"] = LocalPlayer.UserId
+            }
+        }
+        game:GetService("ReplicatedStorage").RemoteFunction:InvokeServer(unpack(args))
+    end)
+
+    button.Parent = Frame
 end
 
--- Labels
-local function createLabel(text, yPos)
-	local label = Instance.new("TextLabel", MainFrame)
-	label.Size = UDim2.new(0, 200, 0, 30)
-	label.Position = UDim2.new(0, 160, 0, yPos)
-	label.BackgroundTransparency = 1
-	label.Text = text
-	label.TextColor3 = Color3.fromRGB(0, 255, 128)
-	label.Font = Enum.Font.Code
-	label.TextSize = 16
-	label.TextXAlignment = Enum.TextXAlignment.Left
-	return label
+for _, petType in ipairs(PetTypes) do
+    createPetButton(petType)
 end
 
--- Pet Types and Names
-local PetType = "NP"
-local PetName = "Dog"
+local Footer = Instance.new("TextLabel", Frame)
+Footer.Text = "discord.gg/8SvuYKddYu"
+Footer.Size = UDim2.new(1, 0, 0, 25)
+Footer.BackgroundTransparency = 1
+Footer.TextColor3 = Color3.fromRGB(50, 255, 100)
+Footer.Font = Enum.Font.Code
+Footer.TextSize = 13
+Footer.TextWrapped = true
+Footer.TextXAlignment = Enum.TextXAlignment.Center
+Footer.LayoutOrder = 999
 
--- Buttons + Labels
-local spawnBtn = createButton("Spawn Pet", 40)
-createLabel("Spawn: "..PetType.." "..PetName, 40)
-
-local equipBtn = createButton("Equip Pet", 80)
-createLabel("Equips spawned pet", 80)
-
-local unequipBtn = createButton("Unequip Pet", 120)
-createLabel("Removes pet from you", 120)
-
-local clearBtn = createButton("Clear All", 160)
-createLabel("Despawn all pets", 160)
-
--- Footer
-local footer = Instance.new("TextLabel", MainFrame)
-footer.Size = UDim2.new(1, 0, 0, 30)
-footer.Position = UDim2.new(0, 0, 1, -30)
-footer.BackgroundTransparency = 1
-footer.Text = "discord.gg/8SvuYKddYu"
-footer.TextColor3 = Color3.fromRGB(0, 255, 128)
-footer.Font = Enum.Font.Code
-footer.TextSize = 14
-footer.TextTransparency = 0.2
-
---// Pet Logic
-local spawnedPet = nil
-
-spawnBtn.MouseButton1Click:Connect(function()
-	if spawnedPet then spawnedPet:Destroy() end
-	spawnedPet = Instance.new("Part", workspace)
-	spawnedPet.Size = Vector3.new(2, 2, 2)
-	spawnedPet.Position = LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(5, 0, 0)
-	spawnedPet.BrickColor = BrickColor.new("Lime green")
-	spawnedPet.Name = PetType.."_"..PetName
-end)
-
-equipBtn.MouseButton1Click:Connect(function()
-	if spawnedPet and LocalPlayer.Character then
-		spawnedPet.Anchored = false
-		local weld = Instance.new("WeldConstraint", spawnedPet)
-		weld.Part0 = LocalPlayer.Character.HumanoidRootPart
-		weld.Part1 = spawnedPet
-	end
-end)
-
-unequipBtn.MouseButton1Click:Connect(function()
-	if spawnedPet then
-		for _, v in pairs(spawnedPet:GetChildren()) do
-			if v:IsA("WeldConstraint") then v:Destroy() end
-		end
-		spawnedPet.Anchored = true
-	end
-end)
-
-clearBtn.MouseButton1Click:Connect(function()
-	if spawnedPet then spawnedPet:Destroy() end
-	spawnedPet = nil
-end)
-
---// Key to hide GUI
-local visible = true
-UIS.InputBegan:Connect(function(input, gp)
-	if not gp and input.KeyCode == Enum.KeyCode.RightControl then
-		visible = not visible
-		MainFrame.Visible = visible
-	end
+-- Keybind to toggle visibility
+UIS.InputBegan:Connect(function(input, gameProcessed)
+    if input.KeyCode == Enum.KeyCode.RightControl and not gameProcessed then
+        Frame.Visible = not Frame.Visible
+    end
 end)
