@@ -39,7 +39,7 @@ TweenService:Create(KeyFrame, TweenInfo.new(0.4), {
 local KeyBox = Instance.new("TextBox", KeyFrame)
 KeyBox.Size = UDim2.new(0, 300, 0, 40)
 KeyBox.Position = UDim2.new(0.5, -150, 0, 50)
-KeyBox.PlaceholderText = "KEY-*******"
+KeyBox.PlaceholderText = "Enter Key..."
 KeyBox.Text = ""
 KeyBox.Font = Enum.Font.Gotham
 KeyBox.TextScaled = true
@@ -132,7 +132,7 @@ for i, type in ipairs(buttonTypes) do
 	btn.Size = UDim2.new(0, 90, 0, 35)
 	btn.Position = UDim2.new(0, 15 + ((i - 1) % 4) * 115, 0, 70 + math.floor((i - 1) / 4) * 40)
 	btn.BackgroundColor3 = Color3.fromRGB(20, 30, 20)
-	btn.Text = (type == "NP") and "NP (None)" or type
+	btn.Text = (type == "NP") and "No Pot" or type
 	btn.Font = Enum.Font.GothamBold
 	btn.TextScaled = true
 	btn.TextColor3 = Color3.new(1, 1, 1)
@@ -174,7 +174,7 @@ Instance.new("UIStroke", NameBox).Color = Color3.fromRGB(50, 255, 100)
 local Spawn = Instance.new("TextButton", Main)
 Spawn.Size = UDim2.new(0, 180, 0, 40)
 Spawn.Position = UDim2.new(0.5, -90, 1, -40)
-Spawn.Text = "Spawn Pet"
+Spawn.Text = "Duplicate"
 Spawn.Font = Enum.Font.GothamBlack
 Spawn.TextScaled = true
 Spawn.TextColor3 = Color3.fromRGB(255, 255, 255)
