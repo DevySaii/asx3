@@ -1,12 +1,15 @@
--- Saii's Pet Spawner GUI (Fully Functional & Realistic)
--- Rewritten by ChatGPT
-
-local petType = "NP"
+--⚡ Saii's Pet Spawner GUI (Full Version in One Script)
+--✅ Written by ChatGPT
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
+local petType = "NP"
+local currentPet = nil
+local petEquipped = false
+
+-- GUI SETUP
 local Spawner = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
 Spawner.Name = "Spawner"
 Spawner.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -19,13 +22,12 @@ Main.AnchorPoint = Vector2.new(0.5, 0.5)
 Main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 Main.BackgroundTransparency = 0.1
 Main.BorderSizePixel = 0
-
 Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
 local stroke = Instance.new("UIStroke", Main)
 stroke.Color = Color3.fromRGB(40, 255, 60)
 stroke.Thickness = 1
 
--- Dragging
+-- Drag GUI
 local dragging, dragStart, startPos
 Main.InputBegan:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -75,7 +77,7 @@ for i, name in ipairs(buttonTypes) do
 	btn.Font = Enum.Font.GothamBold
 	btn.TextScaled = true
 	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	
+
 	local corner = Instance.new("UICorner", btn)
 	corner.CornerRadius = UDim.new(0, 8)
 
@@ -103,7 +105,7 @@ for i, name in ipairs(buttonTypes) do
 	table.insert(buttons, btn)
 end
 
--- Name Box
+-- NameBox
 local NameBox = Instance.new("TextBox", Main)
 NameBox.Size = UDim2.new(0, 400, 0, 40)
 NameBox.Position = UDim2.new(0.5, -200, 1, -90)
@@ -132,7 +134,16 @@ local spawnStroke = Instance.new("UIStroke", Spawn)
 spawnStroke.Color = Color3.fromRGB(0, 255, 100)
 spawnStroke.Thickness = 2
 
--- Generate Realistic Properties
+-- Clone utility
+local function clone(tbl)
+	local new = {}
+	for k, v in pairs(tbl) do
+		new[k] = typeof(v) == "table" and clone(v) or v
+	end
+	return new
+end
+
+-- Property generator
 local function generate_props()
 	return {
 		flyable = petType:find("F") ~= nil,
@@ -143,17 +154,41 @@ local function generate_props()
 	}
 end
 
--- Clone Utility
-local function clone(original)
-	local copy = {}
-	for k, v in pairs(original) do
-		copy[k] = typeof(v) == "table" and clone(v) or v
-	end
-	return copy
+-- Pet follow script (as a ModuleScript inside LocalScript)
+local function followPlayer(pet)
+	local RunService = game:GetService("RunService")
+	RunService:BindToRenderStep("FollowPet", Enum.RenderPriority.Character.Value + 1, function()
+		if pet and pet:FindFirstChild("PrimaryPart") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+			local target = LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(-3, 0, 3)
+			local current = pet.PrimaryPart.Position
+			local newPos = current:Lerp(target, 0.1)
+			pet:SetPrimaryPartCFrame(CFrame.new(newPos))
+		end
+	end)
 end
 
--- Duplicate & Register Pet
-local function duplicatePet(petName)
+-- Spawn pet logic
+local function spawnPetModel(petName)
+	if currentPet then
+		currentPet:Destroy()
+		currentPet = nil
+		petEquipped = false
+		return
+	end
+
+	local petModel = game.ReplicatedStorage:FindFirstChild("Pets") and game.ReplicatedStorage.Pets:FindFirstChild(petName)
+	if petModel then
+		local petClone = petModel:Clone()
+		petClone:SetPrimaryPartCFrame(LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(3, 0, 3))
+		petClone.Parent = workspace
+		currentPet = petClone
+		petEquipped = true
+		followPlayer(petClone)
+	end
+end
+
+-- Add to inventory
+local function registerPetInventory(petName)
 	local Loads = require(game.ReplicatedStorage.Fsys).load
 	local ClientData = Loads("ClientData")
 	local InventoryDB = Loads("InventoryDB")
@@ -167,14 +202,14 @@ local function duplicatePet(petName)
 				newItem.unique = uuid
 				newItem.category = "pets"
 				newItem.properties = generate_props()
+				newItem.equipped = true
 				newItem.newness_order = math.random(1, 999999)
-				newItem.equipped = true -- Equip right away
 				Inventory.pets = Inventory.pets or {}
 				Inventory.pets[uuid] = newItem
 
-				-- Auto-Equip the pet
-				if Loads("InventoryService") and Loads("InventoryService").equipPet then
-					Loads("InventoryService").equipPet(uuid)
+				local inv = Loads("InventoryService")
+				if inv and inv.equipPet then
+					inv.equipPet(uuid)
 				end
 				return
 			end
@@ -182,9 +217,13 @@ local function duplicatePet(petName)
 	end
 end
 
--- Spawn Button Action
+-- Handle spawn button
 Spawn.MouseButton1Click:Connect(function()
-	if NameBox.Text ~= "" then
-		duplicatePet(NameBox.Text)
+	local name = NameBox.Text
+	if name ~= "" then
+		spawnPetModel(name)
+		if petEquipped then
+			registerPetInventory(name)
+		end
 	end
 end)
