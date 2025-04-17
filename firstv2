@@ -1,248 +1,136 @@
--- LynxIT Visual Script v2 - Clean Rewrite with Gradient UI, Token Check, and Discord Link
-local allowedKeys = {
-	["KEY-daRfjQOyuIsPupQNMXiiGPQKucsDthlw"] = true,
-	["KEY-VoMAHmWmEhqXthMJYMjDpaAcYOLCJDfY"] = true,
-}
-local usedKeys = {}
+--// LynxIT Visual Script v2 (clean UI like Azure Modded)
+
 local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local HttpService = game:GetService("HttpService")
 local LocalPlayer = Players.LocalPlayer
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
--- GUI setup
-local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
-gui.Name = "LynxITSpawner"
-gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-gui.ResetOnSpawn = false
+--// UI Creation
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+ScreenGui.Name = "LynxITGui"
+ScreenGui.ResetOnSpawn = false
 
--- Redirect to Discord on execute
-pcall(function()
-	LocalPlayer:Kick("Redirecting to Discord...")
-	syn and syn.request({ Url = "https://discord.gg/YOURINVITE", Method = "GET" })
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0, 400, 0, 280)
+MainFrame.Position = UDim2.new(0.5, -200, 0.5, -140)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+MainFrame.BorderSizePixel = 0
+MainFrame.Visible = true
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+local UIStroke = Instance.new("UIStroke", MainFrame)
+UIStroke.Color = Color3.fromRGB(0, 255, 128)
+UIStroke.Thickness = 2
+
+local Title = Instance.new("TextLabel", MainFrame)
+Title.Text = "LynxIT Visual Script v2"
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.BackgroundTransparency = 1
+Title.TextColor3 = Color3.fromRGB(0, 255, 128)
+Title.Font = Enum.Font.Code
+Title.TextSize = 18
+
+-- Buttons
+local function createButton(text, yPos)
+	local button = Instance.new("TextButton", MainFrame)
+	button.Size = UDim2.new(0, 120, 0, 30)
+	button.Position = UDim2.new(0, 20, 0, yPos)
+	button.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+	button.BorderSizePixel = 0
+	button.Text = text
+	button.TextColor3 = Color3.fromRGB(0, 255, 128)
+	button.Font = Enum.Font.Code
+	button.TextSize = 16
+
+	local stroke = Instance.new("UIStroke", button)
+	stroke.Color = Color3.fromRGB(0, 255, 128)
+
+	return button
+end
+
+-- Labels
+local function createLabel(text, yPos)
+	local label = Instance.new("TextLabel", MainFrame)
+	label.Size = UDim2.new(0, 200, 0, 30)
+	label.Position = UDim2.new(0, 160, 0, yPos)
+	label.BackgroundTransparency = 1
+	label.Text = text
+	label.TextColor3 = Color3.fromRGB(0, 255, 128)
+	label.Font = Enum.Font.Code
+	label.TextSize = 16
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	return label
+end
+
+-- Pet Types and Names
+local PetType = "NP"
+local PetName = "Dog"
+
+-- Buttons + Labels
+local spawnBtn = createButton("Spawn Pet", 40)
+createLabel("Spawn: "..PetType.." "..PetName, 40)
+
+local equipBtn = createButton("Equip Pet", 80)
+createLabel("Equips spawned pet", 80)
+
+local unequipBtn = createButton("Unequip Pet", 120)
+createLabel("Removes pet from you", 120)
+
+local clearBtn = createButton("Clear All", 160)
+createLabel("Despawn all pets", 160)
+
+-- Footer
+local footer = Instance.new("TextLabel", MainFrame)
+footer.Size = UDim2.new(1, 0, 0, 30)
+footer.Position = UDim2.new(0, 0, 1, -30)
+footer.BackgroundTransparency = 1
+footer.Text = "discord.gg/8SvuYKddYu"
+footer.TextColor3 = Color3.fromRGB(0, 255, 128)
+footer.Font = Enum.Font.Code
+footer.TextSize = 14
+footer.TextTransparency = 0.2
+
+--// Pet Logic
+local spawnedPet = nil
+
+spawnBtn.MouseButton1Click:Connect(function()
+	if spawnedPet then spawnedPet:Destroy() end
+	spawnedPet = Instance.new("Part", workspace)
+	spawnedPet.Size = Vector3.new(2, 2, 2)
+	spawnedPet.Position = LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(5, 0, 0)
+	spawnedPet.BrickColor = BrickColor.new("Lime green")
+	spawnedPet.Name = PetType.."_"..PetName
 end)
 
--- Token Entry
-local tokenFrame = Instance.new("Frame", gui)
-tokenFrame.Size = UDim2.new(0, 400, 0, 200)
-tokenFrame.Position = UDim2.new(0.5, -200, 0.5, -100)
-tokenFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-tokenFrame.ClipsDescendants = true
-Instance.new("UICorner", tokenFrame).CornerRadius = UDim.new(0, 10)
-
-local tokenBox = Instance.new("TextBox", tokenFrame)
-tokenBox.PlaceholderText = "Enter Access Token..."
-tokenBox.Size = UDim2.new(0, 300, 0, 40)
-tokenBox.Position = UDim2.new(0.5, -150, 0, 60)
-tokenBox.Text = ""
-tokenBox.Font = Enum.Font.Gotham
-tokenBox.TextScaled = true
-tokenBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-tokenBox.TextColor3 = Color3.new(1, 1, 1)
-Instance.new("UICorner", tokenBox).CornerRadius = UDim.new(0, 8)
-local tokenStroke = Instance.new("UIStroke", tokenBox)
-tokenStroke.Color = Color3.fromRGB(0, 255, 100)
-
-local unlockButton = Instance.new("TextButton", tokenFrame)
-unlockButton.Text = "Unlock"
-unlockButton.Size = UDim2.new(0, 180, 0, 35)
-unlockButton.Position = UDim2.new(0.5, -90, 1, -60)
-unlockButton.Font = Enum.Font.GothamBold
-unlockButton.TextScaled = true
-unlockButton.BackgroundColor3 = Color3.fromRGB(20, 80, 20)
-unlockButton.TextColor3 = Color3.new(1, 1, 1)
-Instance.new("UICorner", unlockButton).CornerRadius = UDim.new(0, 10)
-Instance.new("UIStroke", unlockButton).Color = Color3.fromRGB(0, 255, 100)
-
--- Main Panel (hidden initially)
-local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0, 0, 0, 0)
-main.Position = UDim2.new(0.5, 0, 0.5, 0)
-main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-main.Visible = false
-Instance.new("UICorner", main).CornerRadius = UDim.new(0, 12)
-Instance.new("UIStroke", main).Color = Color3.fromRGB(0, 255, 100)
-
--- Draggable
-local dragging, dragStart, startPos
-main.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging, dragStart, startPos = true, input.Position, main.Position
+equipBtn.MouseButton1Click:Connect(function()
+	if spawnedPet and LocalPlayer.Character then
+		spawnedPet.Anchored = false
+		local weld = Instance.new("WeldConstraint", spawnedPet)
+		weld.Part0 = LocalPlayer.Character.HumanoidRootPart
+		weld.Part1 = spawnedPet
 	end
 end)
-main.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
-end)
-UserInputService.InputChanged:Connect(function(input)
-	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-		local delta = input.Position - dragStart
-		main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-	end
-end)
 
--- Show Main Panel
-local function showMain()
-	main.Visible = true
-	TweenService:Create(main, TweenInfo.new(0.4), {
-		Size = UDim2.new(0, 500, 0, 360),
-		Position = UDim2.new(0.5, -250, 0.5, -180)
-	}):Play()
-end
-
--- Title
-local title = Instance.new("TextLabel", main)
-title.Text = "LynxIT | Visual Script v2"
-title.Size = UDim2.new(1, 0, 0, 40)
-title.Font = Enum.Font.GothamBlack
-title.TextScaled = true
-title.BackgroundTransparency = 1
-title.TextColor3 = Color3.fromRGB(0, 255, 100)
-
--- Pet Type Buttons
-local petType = "NP"
-local buttons = {}
-local types = {"NP", "F", "R", "FR", "N", "NR", "NF", "NFR", "M", "MR", "MF", "MFR"}
-
-local function resetColors()
-	for _, btn in pairs(buttons) do
-		btn.TextColor3 = Color3.new(1, 1, 1)
-		btn.UIStroke.Color = Color3.fromRGB(40, 40, 40)
-	end
-end
-
-for i, t in ipairs(types) do
-	local btn = Instance.new("TextButton", main)
-	btn.Size = UDim2.new(0, 90, 0, 35)
-	btn.Position = UDim2.new(0, 20 + ((i - 1) % 4) * 115, 0, 50 + math.floor((i - 1) / 4) * 40)
-	btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-	btn.Text = t
-	btn.Font = Enum.Font.GothamBold
-	btn.TextScaled = true
-	btn.TextColor3 = Color3.new(1, 1, 1)
-	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-	local stroke = Instance.new("UIStroke", btn)
-	stroke.Color = Color3.fromRGB(40, 40, 40)
-	Instance.new("UIGradient", btn).Color = ColorSequence.new{
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(10, 80, 10)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 100))
-	}
-	btn.MouseButton1Click:Connect(function()
-		resetColors()
-		petType = t
-		btn.TextColor3 = Color3.fromRGB(25, 255, 21)
-		stroke.Color = Color3.fromRGB(0, 255, 100)
-	end)
-	table.insert(buttons, btn)
-end
-
--- Pet Name Box
-local nameBox = Instance.new("TextBox", main)
-nameBox.PlaceholderText = "Pet Name..."
-nameBox.Size = UDim2.new(0, 420, 0, 40)
-nameBox.Position = UDim2.new(0.5, -210, 1, -90)
-nameBox.Text = ""
-nameBox.Font = Enum.Font.Gotham
-nameBox.TextScaled = true
-nameBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-nameBox.TextColor3 = Color3.new(1, 1, 1)
-Instance.new("UICorner", nameBox).CornerRadius = UDim.new(0, 8)
-Instance.new("UIStroke", nameBox).Color = Color3.fromRGB(0, 255, 100)
-
--- Spawn Button
-local spawn = Instance.new("TextButton", main)
-spawn.Text = "Spawn Pet"
-spawn.Size = UDim2.new(0, 180, 0, 40)
-spawn.Position = UDim2.new(0.5, -90, 1, -40)
-spawn.Font = Enum.Font.GothamBlack
-spawn.TextScaled = true
-spawn.TextColor3 = Color3.new(1, 1, 1)
-spawn.BackgroundColor3 = Color3.fromRGB(20, 80, 20)
-Instance.new("UICorner", spawn).CornerRadius = UDim.new(0, 10)
-Instance.new("UIStroke", spawn).Color = Color3.fromRGB(0, 255, 100)
-
--- Discord Copy Button
-local discordBox = Instance.new("TextButton", main)
-discordBox.Size = UDim2.new(0, 140, 0, 35)
-discordBox.Position = UDim2.new(1, -150, 0, 10)
-discordBox.Text = "Copy Discord"
-discordBox.Font = Enum.Font.GothamBold
-discordBox.TextScaled = true
-discordBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-discordBox.TextColor3 = Color3.new(1, 1, 1)
-Instance.new("UICorner", discordBox).CornerRadius = UDim.new(0, 10)
-Instance.new("UIStroke", discordBox).Color = Color3.fromRGB(0, 255, 100)
-
-discordBox.MouseButton1Click:Connect(function()
-	setclipboard("https://discord.gg/YOURINVITE")
-	discordBox.Text = "Copied!"
-	task.wait(1)
-	discordBox.Text = "Copy Discord"
-end)
-
--- Pet Property Generator
-local function generateProps()
-	return {
-		age = 1,
-		flyable = petType:find("F") ~= nil,
-		rideable = petType:find("R") ~= nil,
-		neon = petType:find("N") and not petType:find("NP"),
-		mega_neon = petType:find("M") ~= nil
-	}
-end
-
-local function clone(t)
-	local c = {}
-	for k, v in pairs(t) do c[k] = typeof(v) == "table" and clone(v) or v end
-	return c
-end
-
-local function spawnPet(name)
-	local Loads = require(game.ReplicatedStorage.Fsys).load
-	local ClientData = Loads("ClientData")
-	local InventoryDB = Loads("InventoryDB")
-	local Inventory = ClientData.get("inventory")
-
-	for _, pets in pairs(InventoryDB) do
-		for id, pet in pairs(pets) do
-			if pet.name:lower() == name:lower() then
-				local newPet = clone(pet)
-				local uuid = "uuid_" .. HttpService:GenerateGUID()
-				newPet.unique = uuid
-				newPet.category = "pets"
-				newPet.properties = generateProps()
-				newPet.newness_order = math.random(1, 999999)
-				Inventory.pets = Inventory.pets or {}
-				Inventory.pets[uuid] = newPet
-				return
-			end
+unequipBtn.MouseButton1Click:Connect(function()
+	if spawnedPet then
+		for _, v in pairs(spawnedPet:GetChildren()) do
+			if v:IsA("WeldConstraint") then v:Destroy() end
 		end
+		spawnedPet.Anchored = true
 	end
-end
-
--- Button Logic
-spawn.MouseButton1Click:Connect(function()
-	if nameBox.Text ~= "" then spawnPet(nameBox.Text) end
 end)
 
-unlockButton.MouseButton1Click:Connect(function()
-	local key = tokenBox.Text
-	if allowedKeys[key] and not usedKeys[key] then
-		usedKeys[key] = true
-		tokenFrame:Destroy()
-		showMain()
-	elseif usedKeys[key] then
-		tokenBox.Text = ""
-		tokenBox.PlaceholderText = "Key Already Used"
-		tokenStroke.Color = Color3.fromRGB(255, 120, 0)
-		task.wait(1)
-		tokenBox.PlaceholderText = "Enter Access Token..."
-		tokenStroke.Color = Color3.fromRGB(0, 255, 100)
-	else
-		tokenBox.Text = ""
-		tokenBox.PlaceholderText = "Invalid Key"
-		tokenStroke.Color = Color3.fromRGB(255, 0, 0)
-		task.wait(1)
-		tokenBox.PlaceholderText = "Enter Access Token..."
-		tokenStroke.Color = Color3.fromRGB(0, 255, 100)
+clearBtn.MouseButton1Click:Connect(function()
+	if spawnedPet then spawnedPet:Destroy() end
+	spawnedPet = nil
+end)
+
+--// Key to hide GUI
+local visible = true
+UIS.InputBegan:Connect(function(input, gp)
+	if not gp and input.KeyCode == Enum.KeyCode.RightControl then
+		visible = not visible
+		MainFrame.Visible = visible
 	end
 end)
