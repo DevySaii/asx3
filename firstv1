@@ -1,146 +1,121 @@
--- Saii's Pet Spawner GUI
+-- Roblox Pet Spawner GUI with 13 Pet Types
+-- Author: Saii (Customized by ChatGPT)
 
--- GUI Setup
-local Spawner = Instance.new("ScreenGui")
-local Main = Instance.new("Frame")
-local Title = Instance.new("TextLabel")
-local UICorner = Instance.new("UICorner")
-local NameBox = Instance.new("TextBox")
-local UICorner_Name = Instance.new("UICorner")
-local Spawn = Instance.new("TextButton")
-local UICorner_Spawn = Instance.new("UICorner")
+local petType = "NP"
 
-Spawner.Name = "SaiiScript"
-Spawner.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+local Spawner = Instance.new("ScreenGui", game.Players.LocalPlayer:WaitForChild("PlayerGui"))
+Spawner.Name = "Spawner"
 Spawner.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-Main.Name = "Main"
-Main.Parent = Spawner
+local Main = Instance.new("Frame", Spawner)
+Main.Size = UDim2.new(0, 480, 0, 320)
+Main.Position = UDim2.new(0.5, -240, 0.5, -160)
+Main.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
 Main.AnchorPoint = Vector2.new(0.5, 0.5)
-Main.Position = UDim2.new(0.5, 0, 0.5, 0)
-Main.Size = UDim2.new(0, 500, 0, 360)
-Main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
 
-UICorner.CornerRadius = UDim.new(0, 10)
-UICorner.Parent = Main
-
-Title.Name = "Title"
-Title.Parent = Main
+local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, 0, 0, 40)
-Title.BackgroundTransparency = 1
+Title.Position = UDim2.new(0, 0, 0, 0)
+Title.Text = "Saii's Pet Spawner"
 Title.Font = Enum.Font.GothamBold
-Title.Text = "Saii's Script - Pet Spawner"
-Title.TextColor3 = Color3.fromRGB(0, 255, 100)
-Title.TextScaled = true
+Title.TextSize = 22
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.BackgroundTransparency = 1
 
-NameBox.Name = "NameBox"
-NameBox.Parent = Main
-NameBox.Position = UDim2.new(0.5, 0, 0.3, 0)
-NameBox.AnchorPoint = Vector2.new(0.5, 0)
-NameBox.Size = UDim2.new(0.9, 0, 0.1, 0)
-NameBox.Font = Enum.Font.Gotham
+local buttonTypes = {"NP", "F", "R", "FR", "N", "NR", "NF", "NFR", "M", "MR", "MF", "MFR"}
+local buttons = {}
+
+local function resetColors()
+	for _, btn in pairs(buttons) do
+		btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	end
+end
+
+for i, name in ipairs(buttonTypes) do
+	local btn = Instance.new("TextButton", Main)
+	btn.Size = UDim2.new(0, 90, 0, 35)
+	btn.Position = UDim2.new(0, 15 + ((i - 1) % 4) * 115, 0, 50 + math.floor((i - 1) / 4) * 40)
+	btn.BackgroundColor3 = Color3.fromRGB(6, 6, 6)
+	btn.Text = name
+	btn.Font = Enum.Font.GothamBold
+	btn.TextScaled = true
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+
+	btn.MouseButton1Click:Connect(function()
+		resetColors()
+		btn.TextColor3 = Color3.fromRGB(25, 255, 21)
+		petType = name
+	end)
+
+	table.insert(buttons, btn)
+end
+
+local NameBox = Instance.new("TextBox", Main)
+NameBox.Size = UDim2.new(0, 380, 0, 40)
+NameBox.Position = UDim2.new(0.5, -190, 1, -85)
 NameBox.PlaceholderText = "Enter Pet Name"
 NameBox.Text = ""
-NameBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-NameBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+NameBox.Font = Enum.Font.GothamBold
 NameBox.TextScaled = true
+NameBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+NameBox.BackgroundColor3 = Color3.fromRGB(6, 6, 6)
+Instance.new("UICorner", NameBox).CornerRadius = UDim.new(0, 6)
 
-UICorner_Name.CornerRadius = UDim.new(0, 6)
-UICorner_Name.Parent = NameBox
-
-Spawn.Name = "Spawn"
-Spawn.Parent = Main
-Spawn.Position = UDim2.new(0.5, 0, 0.5, 0)
-Spawn.AnchorPoint = Vector2.new(0.5, 0)
-Spawn.Size = UDim2.new(0.5, 0, 0.1, 0)
+local Spawn = Instance.new("TextButton", Main)
+Spawn.Size = UDim2.new(0, 180, 0, 40)
+Spawn.Position = UDim2.new(0.5, -90, 1, -40)
+Spawn.Text = "Spawn"
 Spawn.Font = Enum.Font.GothamBold
-Spawn.Text = "Spawn All Types"
-Spawn.TextColor3 = Color3.fromRGB(255, 255, 255)
-Spawn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
 Spawn.TextScaled = true
+Spawn.TextColor3 = Color3.fromRGB(255, 255, 255)
+Spawn.BackgroundColor3 = Color3.fromRGB(6, 6, 6)
+Instance.new("UICorner", Spawn).CornerRadius = UDim.new(0, 6)
 
-UICorner_Spawn.CornerRadius = UDim.new(0, 6)
-UICorner_Spawn.Parent = Spawn
+local function duplicatePet(petName)
+	local Loads = require(game.ReplicatedStorage.Fsys).load
+	local ClientData = Loads("ClientData")
+	local InventoryDB = Loads("InventoryDB")
+	local Inventory = ClientData.get("inventory")
 
--- Pet Spawning Logic
+	local function generate_props()
+		return {
+			flyable = petType:find("F") ~= nil,
+			rideable = petType:find("R") ~= nil,
+			neon = petType:find("N") ~= nil,
+			mega_neon = petType:find("M") ~= nil,
+			age = 1
+		}
+	end
+
+	local function clone(original)
+		local copy = {}
+		for k, v in pairs(original) do
+			copy[k] = typeof(v) == "table" and clone(v) or v
+		end
+		return copy
+	end
+
+	for _, pets in pairs(InventoryDB) do
+		for id, item in pairs(pets) do
+			if item.name:lower() == petName:lower() then
+				local newItem = clone(item)
+				local uuid = "uuid_" .. game.HttpService:GenerateGUID()
+				newItem.unique = uuid
+				newItem.category = "pets"
+				newItem.properties = generate_props()
+				newItem.newness_order = math.random(1, 900000)
+				Inventory.pets = Inventory.pets or {}
+				Inventory.pets[uuid] = newItem
+				return
+			end
+		end
+	end
+end
+
 Spawn.MouseButton1Click:Connect(function()
-    local petName = NameBox.Text
-    if petName == "" then return end
-
-    local Loads = require(game.ReplicatedStorage.Fsys).load
-    local ClientData = Loads("ClientData")
-    local InventoryDB = Loads("InventoryDB")
-    local Inventory = ClientData.get("inventory")
-
-    local function cloneTable(original)
-        local copy = {}
-        for k, v in pairs(original) do
-            copy[k] = typeof(v) == "table" and cloneTable(v) or v
-        end
-        return copy
-    end
-
-    local function createPet(name, props)
-        for _, category in pairs(InventoryDB) do
-            for _, item in pairs(category) do
-                if item.name == name then
-                    local uuid = game.HttpService:GenerateGUID(false)
-                    local n_item = cloneTable(item)
-                    n_item.unique = "uuid_" .. uuid
-                    n_item.category = "pets"
-                    n_item.properties = props
-                    n_item.newness_order = math.random(1, 900000)
-
-                    Inventory["pets"] = Inventory["pets"] or {}
-                    Inventory["pets"][uuid] = n_item
-                    return
-                end
-            end
-        end
-    end
-
-    local petVariants = {
-        {label = "NP",  props = {rideable=false, flyable=false, neon=false, mega_neon=false}},
-        {label = "F",   props = {rideable=false, flyable=true,  neon=false, mega_neon=false}},
-        {label = "R",   props = {rideable=true,  flyable=false, neon=false, mega_neon=false}},
-        {label = "FR",  props = {rideable=true,  flyable=true,  neon=false, mega_neon=false}},
-        {label = "Neon",props = {rideable=false, flyable=false, neon=true,  mega_neon=false}},
-        {label = "NR",  props = {rideable=true,  flyable=false, neon=true,  mega_neon=false}},
-        {label = "NF",  props = {rideable=false, flyable=true,  neon=true,  mega_neon=false}},
-        {label = "NFR", props = {rideable=true,  flyable=true,  neon=true,  mega_neon=false}},
-        {label = "M",   props = {rideable=false, flyable=false, neon=true,  mega_neon=true}},
-        {label = "MR",  props = {rideable=true,  flyable=false, neon=true,  mega_neon=true}},
-        {label = "MF",  props = {rideable=false, flyable=true,  neon=true,  mega_neon=true}},
-        {label = "MFR", props = {rideable=true,  flyable=true,  neon=true,  mega_neon=true}},
-    }
-
-    for _, variant in pairs(petVariants) do
-        variant.props.age = 1
-        createPet(petName, variant.props)
-    end
-end)
-
--- GUI Draggable Support
-local UIS = game:GetService("UserInputService")
-local dragging, dragStart, startPos
-
-Main.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = Main.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
-end)
-
-Main.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - dragStart
-        Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
-                                  startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
+	if NameBox.Text ~= "" then
+		duplicatePet(NameBox.Text)
+	end
 end)
