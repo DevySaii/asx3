@@ -1,4 +1,4 @@
---- LynxIT Visual Script v2 - Clean Rewrite with Gradient UI, Token Check, and Discord Link
+-- LynxIT Visual Script v2 - Clean Rewrite with Gradient UI, Token Check, and Discord Link
 local allowedKeys = {
 	["KEY-daRfjQOyuIsPupQNMXiiGPQKucsDthlw"] = true,
 	["KEY-VoMAHmWmEhqXthMJYMjDpaAcYOLCJDfY"] = true,
@@ -137,7 +137,7 @@ end
 
 -- Pet Name Box
 local nameBox = Instance.new("TextBox", main)
-nameBox.PlaceholderText = "Valid Pet..."
+nameBox.PlaceholderText = "Pet Name..."
 nameBox.Size = UDim2.new(0, 420, 0, 40)
 nameBox.Position = UDim2.new(0.5, -210, 1, -90)
 nameBox.Text = ""
@@ -150,7 +150,7 @@ Instance.new("UIStroke", nameBox).Color = Color3.fromRGB(0, 255, 100)
 
 -- Spawn Button
 local spawn = Instance.new("TextButton", main)
-spawn.Text = "Duplicate"
+spawn.Text = "Spawn Pet"
 spawn.Size = UDim2.new(0, 180, 0, 40)
 spawn.Position = UDim2.new(0.5, -90, 1, -40)
 spawn.Font = Enum.Font.GothamBlack
