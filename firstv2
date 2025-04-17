@@ -13,7 +13,6 @@ local allowedKeys = {
 	["KEY-ZnsippWoYQGenHWWtfXSxqdgtoPiOFNN"] = true,
 	["KEY-hDtCDDwPIMQgZQgbWTTcJOMemXVekwIh"] = true,
 	["KEY-UZPdgoXDYwupnyDEEbdmZYEsqfivEJOo"] = true,
-        ["DevKeys"] = true,
 }
 
 local usedKeys = {} -- Track used keys (local/session-based)
@@ -38,7 +37,7 @@ TweenService:Create(KeyFrame, TweenInfo.new(0.4), {
 	Size = UDim2.new(0, 400, 0, 200)
 }):Play()
 
-local KeyBox = Instance.new("TextBox", KeyFrame)
+local KeyBox = Instance.new("Token Required", KeyFrame)
 KeyBox.Size = UDim2.new(0, 300, 0, 40)
 KeyBox.Position = UDim2.new(0.5, -150, 0, 50)
 KeyBox.PlaceholderText = "Enter Access Key..."
@@ -54,7 +53,7 @@ keyStroke.Color = Color3.fromRGB(0, 255, 100)
 local Confirm = Instance.new("TextButton", KeyFrame)
 Confirm.Size = UDim2.new(0, 180, 0, 35)
 Confirm.Position = UDim2.new(0.5, -90, 1, -60)
-Confirm.Text = "⏎ Unlock"
+Confirm.Text = "SUBMIT"
 Confirm.Font = Enum.Font.GothamBold
 Confirm.TextScaled = true
 Confirm.TextColor3 = Color3.new(1, 1, 1)
@@ -149,7 +148,7 @@ for i, type in ipairs(buttonTypes) do
 end
 
 -- Pet Name
-local NameBox = Instance.new("Token Required", Main)
+local NameBox = Instance.new("Visual Pet", Main)
 NameBox.Size = UDim2.new(0, 400, 0, 40)
 NameBox.Position = UDim2.new(0.5, -200, 1, -90)
 NameBox.PlaceholderText = "Enter Pet Name..."
@@ -166,7 +165,7 @@ nameStroke.Color = Color3.fromRGB(50, 255, 100)
 local Spawn = Instance.new("TextButton", Main)
 Spawn.Size = UDim2.new(0, 180, 0, 40)
 Spawn.Position = UDim2.new(0.5, -90, 1, -40)
-Spawn.Text = "✚ Spawn Pet"
+Spawn.Text = "Duplicate Pet"
 Spawn.Font = Enum.Font.GothamBlack
 Spawn.TextScaled = true
 Spawn.TextColor3 = Color3.fromRGB(255, 255, 255)
