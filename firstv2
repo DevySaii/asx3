@@ -1,62 +1,57 @@
-local function duplicatePet(petName)
-	local ok, Loads = pcall(function()
-		return require(game.ReplicatedStorage:WaitForChild("Fsys")).load
-	end)
-	if not ok then return end
+-- StarterPlayer > StarterPlayerScripts > LocalScript
 
-	local ClientData = Loads("ClientData")
-	local InventoryDB = Loads("InventoryDB")
-	local PetEquip = Loads("PetEquip")
-	local ClientState = Loads("ClientState")
-	local Inventory = ClientData.get("inventory")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
 
-	if not Inventory or not InventoryDB then return end
+-- === 🔧 CONFIG: Replace any pet name with a spoofed one and image ===
+local petSpoofs = {
+    ["Bee"] = {
+        newName = "Bat Dragon",
+        newImage = "rbxassetid://14972007526"
+    },
+    ["Gold Cube"] = {
+        newName = "Frost Dragon",
+        newImage = "rbxassetid://7202980977"
+    },
+    ["Burning Bunny"] = {
+        newName = "Shadow Dragon",
+        newImage = "rbxassetid://12540769437"
+    },
+    -- Add more here!
+}
 
-	for _, pets in pairs(InventoryDB) do
-		for id, item in pairs(pets) do
-			if item.name and item.name:lower() == petName:lower() then
-				local newItem = clone(item)
-				local uuid = "uuid_" .. game.HttpService:GenerateGUID(false)
-				newItem.unique = uuid
-				newItem.category = "pets"
-				newItem.properties = generate_props()
-				newItem.newness_order = math.random(1, 900000)
-				Inventory.pets = Inventory.pets or {}
-				Inventory.pets[uuid] = newItem
-				ClientState.set("equipped_pet", uuid)
+-- === 📦 Get the trade GUI ===
+local function getTradeGui()
+    local playerGui = localPlayer:FindFirstChild("PlayerGui")
+    if not playerGui then return end
 
-				if PetEquip and PetEquip.equip then
-					pcall(function()
-						PetEquip.equip(newItem)
-					end)
-				end
-
-				-- ✅ NEW: Spawn the visible pet model beside the player
-				local petFolder = game.ReplicatedStorage:FindFirstChild("Pets")
-				if petFolder then
-					local petModel = petFolder:FindFirstChild(item.name)
-					if petModel and petModel:IsA("Model") then
-						local clonedPet = petModel:Clone()
-						clonedPet.Name = petName .. "_Clone"
-						clonedPet.Parent = workspace
-
-						local rootPart = clonedPet:FindFirstChild("HumanoidRootPart") or clonedPet:FindFirstChildWhichIsA("BasePart")
-						if rootPart then
-							local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-							local hrp = char:FindFirstChild("HumanoidRootPart")
-							if hrp then
-								rootPart.CFrame = hrp.CFrame * CFrame.new(3, 0, 3)
-							end
-						end
-					else
-						warn("Model for pet '" .. item.name .. "' not found in ReplicatedStorage.Pets.")
-					end
-				else
-					warn("No 'Pets' folder in ReplicatedStorage.")
-				end
-
-				return
-			end
-		end
-	end
+    -- Replace this name if your GUI is named differently
+    return playerGui:FindFirstChild("TradeUI")
 end
+
+-- === 🪄 Replace pets visually in your side of the trade UI ===
+local function spoofTradePets()
+    local gui = getTradeGui()
+    if not gui then return end
+
+    -- Adjust to your side's frame in trade UI
+    local yourSide = gui:FindFirstChild("YourOfferFrame") or gui:FindFirstChild("LeftSide")
+    if not yourSide then return end
+
+    for _, slot in ipairs(yourSide:GetDescendants()) do
+        if slot:IsA("ImageLabel") then
+            local nameLabel = slot:FindFirstChild("PetName") or slot:FindFirstChildWhichIsA("TextLabel")
+            if nameLabel and petSpoofs[nameLabel.Text] then
+                local spoof = petSpoofs[nameLabel.Text]
+                nameLabel.Text = spoof.newName
+                slot.Image = spoof.newImage
+            end
+        end
+    end
+end
+
+-- 🔁 Continuously spoof the visuals every frame
+RunService.RenderStepped:Connect(function()
+    pcall(spoofTradePets)
+end)
