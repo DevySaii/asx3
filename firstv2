@@ -1,13 +1,22 @@
 -- Roblox Pet Spawner GUI with Key System + 13 Pet Types
--- Author: Saii (modified with key check)
+-- Author: Saii (with animation and key enhancement)
 
 local allowedKeys = {
-    ["FZNWEYDSCVHJS#$FGDVCSETDVCDFGASWERDBHFJTOKYTE"] = true,
-    ["ARrWBBRTERNMTgTYREDFHGSDFTwAWDFVvRWDFHJSEWTDAARE"] = true,
+    ["KEY-daRfjQOyuIsPupQNMXiiGPQKucsDthlw"] = true,
+    ["KEY-VoMAHmWmEhqXthMJYMjDpaAcYOLCJDfY"] = true,
+    ["KEY-AOvBASTjaLteGsmHsBJIPDaTGlVUaOrK"] = true,
+    ["KEY-nFlFOLWjRCrsKGiPgshTEeqJRQxlSBLF"] = true,
+    ["KEY-meUcMhdHMtgTTZkbxgWIvjhibGttSFeG"] = true,
+    ["KEY-BjbnQAuFxxUSiivcampcRusdtVXgGtsW"] = true,
+    ["KEY-BoYiXDxrWstpWSkrMuBSHDGOTidmicRn"] = true,
+    ["KEY-gkhmNKYJIqGHQGhXNNLOIEhvqQmVBCqH"] = true,
+    ["KEY-tIcMMsjIKtcoWscTkclUYHfcaruFfUup"] = true,
+    ["KEY-ZnsippWoYQGenHWWtfXSxqdgtoPiOFNN"] = true,
+    ["KEY-hDtCDDwPIMQgZQgbWTTcJOMemXVekwIh"] = true,
+    ["KEY-UZPdgoXDYwupnyDEEbdmZYEsqfivEJOo"] = true,
 }
 
-local petType = "NP"
-
+local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
@@ -22,7 +31,15 @@ local KeyFrame = Instance.new("Frame", Spawner)
 KeyFrame.Size = UDim2.new(0, 400, 0, 200)
 KeyFrame.Position = UDim2.new(0.5, -200, 0.5, -100)
 KeyFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+KeyFrame.BackgroundTransparency = 1
+KeyFrame.Size = UDim2.new(0, 0, 0, 0)
 Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 12)
+
+-- Animate KeyFrame in
+TweenService:Create(KeyFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+    BackgroundTransparency = 0,
+    Size = UDim2.new(0, 400, 0, 200),
+}):Play()
 
 local KeyBox = Instance.new("TextBox", KeyFrame)
 KeyBox.Size = UDim2.new(0, 300, 0, 40)
@@ -39,7 +56,7 @@ keyStroke.Color = Color3.fromRGB(0, 255, 100)
 local Confirm = Instance.new("TextButton", KeyFrame)
 Confirm.Size = UDim2.new(0, 180, 0, 35)
 Confirm.Position = UDim2.new(0.5, -90, 1, -60)
-Confirm.Text = "🔓 Unlock"
+Confirm.Text = "⏎ Unlock"
 Confirm.Font = Enum.Font.GothamBold
 Confirm.TextScaled = true
 Confirm.TextColor3 = Color3.new(1,1,1)
@@ -54,7 +71,7 @@ Main.Size = UDim2.new(0, 500, 0, 340)
 Main.Position = UDim2.new(0.5, -250, 0.5, -170)
 Main.AnchorPoint = Vector2.new(0.5, 0.5)
 Main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-Main.BackgroundTransparency = 0.1
+Main.BackgroundTransparency = 1
 Main.BorderSizePixel = 0
 Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
 local mainStroke = Instance.new("UIStroke", Main)
@@ -64,7 +81,21 @@ mainStroke.Thickness = 1
 Main.Visible = false
 Main.Parent = Spawner
 
--- Drag
+-- Animate Show
+local function showMainUI()
+	Main.Visible = true
+	Main.Size = UDim2.new(0, 0, 0, 0)
+	Main.BackgroundTransparency = 1
+	Main.Position = UDim2.new(0.5, 0, 0.5, 0)
+
+	TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Size = UDim2.new(0, 500, 0, 340),
+		BackgroundTransparency = 0,
+		Position = UDim2.new(0.5, -250, 0.5, -170)
+	}):Play()
+end
+
+-- Dragging Logic
 local dragging, dragStart, startPos
 Main.InputBegan:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -88,15 +119,16 @@ end)
 -- Title
 local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, 0, 0, 40)
-Title.Text = "⚡ Saii's Pet Spawner"
+Title.Text = "✦ Saii's Pet Spawner"
 Title.Font = Enum.Font.GothamBlack
 Title.TextSize = 24
 Title.TextColor3 = Color3.fromRGB(0, 255, 100)
 Title.BackgroundTransparency = 1
 
--- Buttons
+-- Pet Type Buttons
 local buttonTypes = {"NP", "F", "R", "FR", "N", "NR", "NF", "NFR", "M", "MR", "MF", "MFR"}
 local buttons = {}
+local petType = "NP"
 
 local function resetColors()
 	for _, btn in pairs(buttons) do
@@ -142,7 +174,7 @@ for i, name in ipairs(buttonTypes) do
 	table.insert(buttons, btn)
 end
 
--- Pet Name Input
+-- Pet Name Box
 local NameBox = Instance.new("TextBox", Main)
 NameBox.Size = UDim2.new(0, 400, 0, 40)
 NameBox.Position = UDim2.new(0.5, -200, 1, -90)
@@ -161,7 +193,7 @@ nameStroke.Thickness = 1
 local Spawn = Instance.new("TextButton", Main)
 Spawn.Size = UDim2.new(0, 180, 0, 40)
 Spawn.Position = UDim2.new(0.5, -90, 1, -40)
-Spawn.Text = "🎯 Spawn Pet"
+Spawn.Text = "✚ Spawn Pet"
 Spawn.Font = Enum.Font.GothamBlack
 Spawn.TextScaled = true
 Spawn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -171,19 +203,13 @@ local spawnStroke = Instance.new("UIStroke", Spawn)
 spawnStroke.Color = Color3.fromRGB(0, 255, 100)
 spawnStroke.Thickness = 2
 
--- Logic
+-- Spawn Logic
 local function generate_props()
-	local props = {
-		flyable = false,
-		rideable = false,
-		neon = false,
-		mega_neon = false,
-		age = 1
-	}
-	if petType == "F" or petType == "FR" or petType == "NF" or petType == "NFR" or petType == "MF" or petType == "MFR" then props.flyable = true end
-	if petType == "R" or petType == "FR" or petType == "NR" or petType == "NFR" or petType == "MR" or petType == "MFR" then props.rideable = true end
-	if petType == "N" or petType == "NR" or petType == "NF" or petType == "NFR" then props.neon = true end
-	if petType == "M" or petType == "MR" or petType == "MF" or petType == "MFR" then props.mega_neon = true end
+	local props = {flyable = false, rideable = false, neon = false, mega_neon = false, age = 1}
+	if petType:find("F") then props.flyable = true end
+	if petType:find("R") then props.rideable = true end
+	if petType:find("N") then props.neon = true end
+	if petType:find("M") then props.mega_neon = true end
 	return props
 end
 
@@ -228,13 +254,13 @@ end)
 Confirm.MouseButton1Click:Connect(function()
 	local enteredKey = KeyBox.Text
 	if allowedKeys[enteredKey] then
-		KeyFrame.Visible = false
-		Main.Visible = true
+		KeyFrame:Destroy()
+		showMainUI()
 	else
 		KeyBox.Text = ""
-		KeyBox.PlaceholderText = "❌ Invalid Key"
+		KeyBox.PlaceholderText = "✘ Invalid Key"
 		keyStroke.Color = Color3.fromRGB(255, 0, 0)
-		wait(1)
+		task.wait(1)
 		keyStroke.Color = Color3.fromRGB(0, 255, 100)
 		KeyBox.PlaceholderText = "Enter Access Key..."
 	end
