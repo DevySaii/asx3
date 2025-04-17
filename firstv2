@@ -1,132 +1,218 @@
---== FULL PET SPAWNER GUI (1 FILE) ==--
+-- Roblox Pet Spawner GUI with 13 Pet Types (Smooth UI)
+-- Author: Saii
+
+local petType = "NP"
 
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
 
-local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
+-- GUI Setup
+local Spawner = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+Spawner.Name = "Spawner"
+Spawner.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+Spawner.ResetOnSpawn = false
 
--- Build GUI
-local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-screenGui.Name = "PetSpawner"
-screenGui.ResetOnSpawn = false
+local Main = Instance.new("Frame", Spawner)
+Main.Size = UDim2.new(0, 500, 0, 340)
+Main.Position = UDim2.new(0.5, -250, 0.5, -170)
+Main.AnchorPoint = Vector2.new(0.5, 0.5)
+Main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Main.BackgroundTransparency = 0.1
+Main.BorderSizePixel = 0
 
-local frame = Instance.new("Frame", screenGui)
-frame.Position = UDim2.new(0.5, -150, 0.5, -120)
-frame.Size = UDim2.new(0, 300, 0, 240)
-frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-frame.BorderSizePixel = 0
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
+local mainStroke = Instance.new("UIStroke", Main)
+mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+mainStroke.Color = Color3.fromRGB(40, 255, 60)
+mainStroke.Thickness = 1
 
-local uiCorner = Instance.new("UICorner", frame)
-uiCorner.CornerRadius = UDim.new(0, 12)
+-- Drag Support
+local dragging, dragStart, startPos
+Main.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = Main.Position
+	end
+end)
 
-local nameBox = Instance.new("TextBox", frame)
-nameBox.Name = "NameBox"
-nameBox.PlaceholderText = "Enter Pet Name"
-nameBox.Size = UDim2.new(1, -20, 0, 30)
-nameBox.Position = UDim2.new(0, 10, 0, 10)
-nameBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-nameBox.TextColor3 = Color3.new(1, 1, 1)
-nameBox.ClearTextOnFocus = false
-Instance.new("UICorner", nameBox).CornerRadius = UDim.new(0, 8)
+Main.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = false
+	end
+end)
 
--- Type Buttons
-local petTypes = { "NP", "F", "R", "FR", "N", "NR", "NF", "NFR", "M", "MR", "MF", "MFR" }
-local selectedType = "NP"
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+		local delta = input.Position - dragStart
+		Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+end)
 
-local typeContainer = Instance.new("Frame", frame)
-typeContainer.Position = UDim2.new(0, 10, 0, 50)
-typeContainer.Size = UDim2.new(1, -20, 0, 100)
-typeContainer.BackgroundTransparency = 1
+-- Title Label
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.Position = UDim2.new(0, 0, 0, 0)
+Title.Text = "⚡ Saii's Pet Spawner"
+Title.Font = Enum.Font.GothamBlack
+Title.TextSize = 24
+Title.TextColor3 = Color3.fromRGB(0, 255, 100)
+Title.BackgroundTransparency = 1
 
-local grid = Instance.new("UIGridLayout", typeContainer)
-grid.CellSize = UDim2.new(0, 60, 0, 30)
-grid.CellPadding = UDim2.new(0, 5, 0, 5)
+-- Pet Type Buttons
+local buttonTypes = {"NP", "F", "R", "FR", "N", "NR", "NF", "NFR", "M", "MR", "MF", "MFR"}
+local buttons = {}
 
-local typeButtons = {}
-
-for _, typeName in ipairs(petTypes) do
-	local btn = Instance.new("TextButton", typeContainer)
-	btn.Name = typeName
-	btn.Text = typeName
-	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-	btn.TextColor3 = Color3.new(1, 1, 1)
-	btn.AutoButtonColor = true
-	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-	typeButtons[typeName] = btn
-
-	btn.MouseButton1Click:Connect(function()
-		selectedType = typeName
-		for _, b in pairs(typeButtons) do
-			b.TextColor3 = Color3.new(1, 1, 1)
-		end
-		btn.TextColor3 = Color3.fromRGB(0, 255, 0)
-	end)
-end
-
--- Spawn Button
-local spawnBtn = Instance.new("TextButton", frame)
-spawnBtn.Name = "Spawn"
-spawnBtn.Text = "🧬 Spawn Pet"
-spawnBtn.Size = UDim2.new(1, -20, 0, 35)
-spawnBtn.Position = UDim2.new(0, 10, 1, -45)
-spawnBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 100)
-spawnBtn.TextColor3 = Color3.new(1, 1, 1)
-Instance.new("UICorner", spawnBtn).CornerRadius = UDim.new(0, 10)
-
--- 🧠 Pet Spawning Logic
-local equippedPet = nil
-
-local function followPlayer(pet)
-	local root = character:WaitForChild("HumanoidRootPart")
-	local petHRP = pet:WaitForChild("HumanoidRootPart")
-	local offset = Vector3.new(3, 0, 3)
-
-	RunService:BindToRenderStep("FollowPet", Enum.RenderPriority.Character.Value + 1, function()
-		if pet and petHRP and root and pet.Parent then
-			local target = root.Position + offset
-			local direction = (target - petHRP.Position).Unit
-			petHRP.Velocity = direction * 10
-		end
-	end)
-end
-
-local function toggleEquip(pet)
-	if equippedPet == pet then
-		equippedPet:Destroy()
-		equippedPet = nil
-		RunService:UnbindFromRenderStep("FollowPet")
-	else
-		if equippedPet then
-			equippedPet:Destroy()
-		end
-		equippedPet = pet
-		followPlayer(pet)
+local function resetColors()
+	for _, btn in pairs(buttons) do
+		btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		btn.UIStroke.Color = Color3.fromRGB(40, 40, 40)
 	end
 end
 
-spawnBtn.MouseButton1Click:Connect(function()
-	local petName = nameBox.Text
-	if petName == "" then warn("Enter a pet name") return end
+for i, name in ipairs(buttonTypes) do
+	local btn = Instance.new("TextButton", Main)
+	btn.Size = UDim2.new(0, 90, 0, 35)
+	btn.Position = UDim2.new(0, 15 + ((i - 1) % 4) * 115, 0, 50 + math.floor((i - 1) / 4) * 40)
+	btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	btn.Text = name
+	btn.Font = Enum.Font.GothamBold
+	btn.TextScaled = true
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
 
-	local petFolder = ReplicatedStorage:FindFirstChild("Pets")
-	if not petFolder then warn("Pets folder missing in ReplicatedStorage") return end
+	local corner = Instance.new("UICorner", btn)
+	corner.CornerRadius = UDim.new(0, 8)
 
-	local petModel = petFolder:FindFirstChild(petName)
-	if not petModel then warn("Pet not found: " .. petName) return end
+	local stroke = Instance.new("UIStroke", btn)
+	stroke.Color = Color3.fromRGB(40, 40, 40)
+	stroke.Thickness = 1
 
-	local petClone = petModel:Clone()
-	petClone.Name = petName .. " [" .. selectedType .. "]"
-
-	local root = character:FindFirstChild("HumanoidRootPart")
-	if not root then warn("No HumanoidRootPart") return end
-
-	petClone:SetPrimaryPartCFrame(root.CFrame * CFrame.new(3, 0, 3))
-	petClone.Parent = workspace
-
-	local clickDetector = Instance.new("ClickDetector", petClone.PrimaryPart)
-	clickDetector.MouseClick:Connect(function()
-		toggleEquip(petClone)
+	btn.MouseEnter:Connect(function()
+		if petType ~= name then
+			btn.TextColor3 = Color3.fromRGB(80, 255, 80)
+		end
 	end)
+
+	btn.MouseLeave:Connect(function()
+		if petType ~= name then
+			btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		end
+	end)
+
+	btn.MouseButton1Click:Connect(function()
+		resetColors()
+		btn.TextColor3 = Color3.fromRGB(25, 255, 21)
+		btn.UIStroke.Color = Color3.fromRGB(0, 255, 100)
+		petType = name
+	end)
+
+	table.insert(buttons, btn)
+end
+
+-- Pet Name Input
+local NameBox = Instance.new("TextBox", Main)
+NameBox.Size = UDim2.new(0, 400, 0, 40)
+NameBox.Position = UDim2.new(0.5, -200, 1, -90)
+NameBox.PlaceholderText = "Enter Pet Name..."
+NameBox.Text = ""
+NameBox.Font = Enum.Font.Gotham
+NameBox.TextScaled = true
+NameBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+NameBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Instance.new("UICorner", NameBox).CornerRadius = UDim.new(0, 8)
+local nameStroke = Instance.new("UIStroke", NameBox)
+nameStroke.Color = Color3.fromRGB(50, 255, 100)
+nameStroke.Thickness = 1
+
+-- Spawn Button
+local Spawn = Instance.new("TextButton", Main)
+Spawn.Size = UDim2.new(0, 180, 0, 40)
+Spawn.Position = UDim2.new(0.5, -90, 1, -40)
+Spawn.Text = "🎯 Spawn Pet"
+Spawn.Font = Enum.Font.GothamBlack
+Spawn.TextScaled = true
+Spawn.TextColor3 = Color3.fromRGB(255, 255, 255)
+Spawn.BackgroundColor3 = Color3.fromRGB(20, 80, 20)
+Instance.new("UICorner", Spawn).CornerRadius = UDim.new(0, 10)
+local spawnStroke = Instance.new("UIStroke", Spawn)
+spawnStroke.Color = Color3.fromRGB(0, 255, 100)
+spawnStroke.Thickness = 2
+
+-- Property Generator
+local function generate_props()
+	local props = {
+		flyable = false,
+		rideable = false,
+		neon = false,
+		mega_neon = false,
+		age = 1
+	}
+
+	if petType:find("F") then props.flyable = true end
+	if petType:find("R") then props.rideable = true end
+	if petType:find("N") and not petType:find("M") then props.neon = true end
+	if petType:find("M") then props.mega_neon = true end
+
+	return props
+end
+
+-- Deep clone
+local function clone(original)
+	local copy = {}
+	for k, v in pairs(original) do
+		copy[k] = typeof(v) == "table" and clone(v) or v
+	end
+	return copy
+end
+
+-- Main pet spawn function
+local function duplicatePet(petName)
+	local Loads = require(game.ReplicatedStorage.Fsys).load
+	local ClientData = Loads("ClientData")
+	local InventoryDB = Loads("InventoryDB")
+	local Inventory = ClientData.get("inventory")
+	local PetsFolder = game.ReplicatedStorage:FindFirstChild("Pets")
+
+	for _, pets in pairs(InventoryDB) do
+		for id, item in pairs(pets) do
+			if item.name:lower() == petName:lower() then
+				local newItem = clone(item)
+				local uuid = "uuid_" .. game.HttpService:GenerateGUID()
+				newItem.unique = uuid
+				newItem.category = "pets"
+				newItem.properties = generate_props()
+				newItem.newness_order = math.random(1, 900000)
+
+				Inventory.pets = Inventory.pets or {}
+				Inventory.pets[uuid] = newItem
+
+				-- Spawn the pet model visibly
+				if PetsFolder then
+					local model = PetsFolder:FindFirstChild(petName)
+					if model then
+						local petClone = model:Clone()
+						petClone.Name = petName .. " [" .. petType .. "]"
+						local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+						if root and petClone.PrimaryPart then
+							petClone:SetPrimaryPartCFrame(root.CFrame * CFrame.new(3, 0, 3))
+						end
+						petClone.Parent = workspace
+					else
+						warn("Pet model '" .. petName .. "' not found in ReplicatedStorage.Pets")
+					end
+				end
+
+				return
+			end
+		end
+	end
+end
+
+-- Spawn Button Event
+Spawn.MouseButton1Click:Connect(function()
+	if NameBox.Text ~= "" then
+		duplicatePet(NameBox.Text)
+	end
 end)
+
