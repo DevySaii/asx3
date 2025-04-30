@@ -1,26 +1,9 @@
-local Loads = require(game.ReplicatedStorage.Fsys).load
-local ClientData = Loads("ClientData")
-local InventoryDB = Loads("InventoryDB")
-local RidePetAPI = Loads("AdoptAPI/RidePet")
-local RideParentAPI = Loads("AdoptAPI/RideParent")
-local FlyPetAPI = Loads("AdoptAPI/FlyPet")
-
-local HttpService = game:GetService("HttpService")
-
-local function clone(t)
-	local c = {}
-	for k, v in pairs(t) do
-		c[k] = typeof(v) == "table" and clone(v) or v
-	end
-	return c
-end
-
-local function duplicatePet(name)
+local function duplicatePet(name, petType)
 	local Inventory = ClientData.get("inventory")
 	Inventory.pets = Inventory.pets or {}
 
 	for _, pets in pairs(InventoryDB) do
-		for id, item in pairs(pets) do
+		for _, item in pairs(pets) do
 			if item.name:lower() == name:lower() then
 				local newItem = clone(item)
 				local uuid = "uuid_" .. HttpService:GenerateGUID(false)
@@ -34,24 +17,31 @@ local function duplicatePet(name)
 					mega_neon = petType:find("M") and not petType:find("NP") or false
 				}
 
-				-- Add pet to inventory
 				Inventory.pets[uuid] = newItem
 
-				-- Apply API-based powers
+				-- Safe API calls for ride and fly based on petType
+				local success, err
+
 				if petType:find("R") then
-					RidePetAPI:Add(uuid)
-					RideParentAPI:Add(uuid)
+					success, err = pcall(function()
+						RidePetAPI:Add(uuid)
+						RideParentAPI:Add(uuid)
+					end)
+					if not success then warn("Ride failed:", err) end
 				end
 
 				if petType:find("F") then
-					FlyPetAPI:Add(uuid)
+					success, err = pcall(function()
+						FlyPetAPI:Add(uuid)
+					end)
+					if not success then warn("Fly failed:", err) end
 				end
 
-				print("Spawned pet:", name, "with UUID:", uuid)
+				print("Pet spawned:", name, "UUID:", uuid)
 				return
 			end
 		end
 	end
 
-	warn("Pet not found in database:", name)
+	warn("Could not find pet:", name)
 end
